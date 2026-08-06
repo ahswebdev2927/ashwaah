@@ -103,7 +103,6 @@ const parseAddress = (addrString: string | null) => {
 const MILESTONES = [
   "Confirmed",
   "Processing",
-  "Ready to Ship",
   "Shipped",
   "Delivered"
 ];
@@ -228,8 +227,8 @@ export default function MyOrdersPage() {
                       <p className="text-[10px] font-bold text-white/40 uppercase tracking-widest mb-2">Status</p>
                       <div className="flex items-center h-6">
                         <span className={`inline-flex items-center px-3 py-0 h-6 rounded-full text-[10px] font-bold uppercase tracking-widest shadow-sm border ${
-                          order.status === 'delivered' ? 'bg-green-500/20 text-green-400 border-green-500/30' : 
-                          order.status === 'cancelled' ? 'bg-red-500/20 text-red-400 border-red-500/30' : 
+                          order.status?.toLowerCase() === 'delivered' ? 'bg-green-500/20 text-green-400 border-green-500/30' : 
+                          order.status?.toLowerCase() === 'cancelled' ? 'bg-red-500/20 text-red-400 border-red-500/30' : 
                           'bg-[#C5A059]/20 text-[#C5A059] border-[#C5A059]/30'
                         }`}>
                           {order.status}
@@ -260,7 +259,15 @@ export default function MyOrdersPage() {
                       
                       {/* Active Progress Line */}
                       {(() => {
-                        const milestoneIndex = MILESTONES.map(m => m.toLowerCase()).indexOf(order.status?.toLowerCase() || "");
+                        const getMilestoneIndex = (status: string) => {
+                          const s = status?.toLowerCase() || "";
+                          if (s === "confirmed") return 0;
+                          if (s === "processing" || s === "ready to ship") return 1;
+                          if (s === "shipped") return 2;
+                          if (s === "delivered") return 3;
+                          return -1;
+                        };
+                        const milestoneIndex = getMilestoneIndex(order.status);
                         return (
                           <div 
                             className="absolute top-1/2 left-0 h-[2px] bg-[#C5A059] -translate-y-1/2 rounded-full transition-all duration-1000 ease-out shadow-[0_0_12px_rgba(197,160,89,0.4)]" 
@@ -274,10 +281,18 @@ export default function MyOrdersPage() {
                       {/* Milestone Dots */}
                       <div className="relative flex justify-between">
                         {MILESTONES.map((m, idx) => {
-                          const lowerMilestones = MILESTONES.map(ms => ms.toLowerCase());
-                          const currentStatusLower = order.status?.toLowerCase() || "";
-                          const isCompleted = lowerMilestones.indexOf(currentStatusLower) >= idx;
-                          const isCurrent = currentStatusLower === m.toLowerCase();
+                          const getMilestoneIndex = (status: string) => {
+                            const s = status?.toLowerCase() || "";
+                            if (s === "confirmed") return 0;
+                            if (s === "processing" || s === "ready to ship") return 1;
+                            if (s === "shipped") return 2;
+                            if (s === "delivered") return 3;
+                            return -1;
+                          };
+                          const milestoneIndex = getMilestoneIndex(order.status);
+                          const isCompleted = milestoneIndex >= idx;
+                          const isCurrent = (order.status?.toLowerCase() === m.toLowerCase()) || 
+                            (m.toLowerCase() === "processing" && order.status?.toLowerCase() === "ready to ship");
                           return (
                             <div key={m} className="flex flex-col items-center">
                               <div className={`w-2 h-2 rounded-full border-2 transition-all duration-500 ${
