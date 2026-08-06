@@ -29,6 +29,12 @@ export async function GET() {
       discountAmount: orders.discountAmount,
       couponTargetType: coupons.targetType,
       couponTargetValue: coupons.targetValue,
+      courierServiceName: orders.courierServiceName,
+      courierId: orders.courierId,
+      trackingNumber: orders.trackingNumber,
+      trackingLink: orders.trackingLink,
+      estimatedDeliveryDate: orders.estimatedDeliveryDate,
+      shippingNotes: orders.shippingNotes,
     })
     .from(orders)
     .leftJoin(coupons, eq(orders.couponCode, coupons.code))

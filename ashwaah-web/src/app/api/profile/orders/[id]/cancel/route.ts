@@ -48,11 +48,12 @@ export async function PATCH(
     const order = orderRows[0];
 
     // Only allow cancellation if order is still pending
-    if (order.status !== "pending") {
+    const status = order.status?.toLowerCase() || "";
+    if (status !== "pending" && status !== "confirmed") {
       return NextResponse.json({
         success: false,
         error: `Cannot cancel an order with status '${order.status}'.`,
-      }, { status: 400 });
+      }, { status: 403 });
     }
 
     await db

@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { ShoppingBag, Clock, CheckCircle2, Truck, Loader2, User, Phone, Ruler, ChevronDown, ChevronUp, Sparkles, Scissors, MapPin, CreditCard } from "lucide-react";
+import { ShoppingBag, Clock, CheckCircle2, Truck, Loader2, User, Phone, Ruler, ChevronDown, ChevronUp, Sparkles, Scissors, MapPin, CreditCard, X } from "lucide-react";
 
 interface OrderItem {
   id: number;
@@ -31,6 +31,12 @@ interface Order {
   paymentStatus: string;
   razorpayOrderId: string | null;
   razorpayPaymentId: string | null;
+  courierServiceName?: string | null;
+  courierId?: string | null;
+  trackingNumber?: string | null;
+  trackingLink?: string | null;
+  estimatedDeliveryDate?: string | null;
+  shippingNotes?: string | null;
 }
 
 function getProductImage(imagesStr: string | null) {
@@ -53,15 +59,32 @@ export default function AdminOrders() {
   const [fromDate, setFromDate] = useState("");
   const [toDate, setToDate] = useState("");
 
+  const [showShippingModal, setShowShippingModal] = useState(false);
+  const [selectedOrderForShipping, setSelectedOrderForShipping] = useState<Order | null>(null);
+  const [shippingForm, setShippingForm] = useState({
+    courierServiceName: "",
+    courierId: "",
+    trackingNumber: "",
+    trackingLink: "",
+    estimatedDeliveryDate: "",
+    shippingNotes: ""
+  });
+  const [isSubmittingShipping, setIsSubmittingShipping] = useState(false);
+  const [toast, setToast] = useState("");
+
+  const showToast = (msg: string) => {
+    setToast(msg);
+    setTimeout(() => setToast(""), 3000);
+  };
+
   const ORDER_STATUSES = [
     "pending",
-    "confirmed",
-    "processing",
-    "shipped",
-    "on the way",
-    "out for delivery",
-    "delivered",
-    "cancelled"
+    "Confirmed",
+    "Processing",
+    "Ready to Ship",
+    "Shipped",
+    "Delivered",
+    "Cancelled"
   ];
 
   useEffect(() => {
@@ -103,7 +126,7 @@ export default function AdminOrders() {
   const statusCounts = {
     pending: orders.filter(o => o.status?.toLowerCase() === "pending").length,
     confirmed: orders.filter(o => o.status?.toLowerCase() === "confirmed").length,
-    processing: orders.filter(o => ["processing", "shipped", "on the way", "out for delivery"].includes(o.status?.toLowerCase())).length,
+    processing: orders.filter(o => ["processing", "ready to ship", "shipped"].includes(o.status?.toLowerCase() || "")).length,
     completed: orders.filter(o => o.status?.toLowerCase() === "delivered").length,
     cancelled: orders.filter(o => o.status?.toLowerCase() === "cancelled").length,
   };
@@ -123,8 +146,8 @@ export default function AdminOrders() {
       const orderStatus = (order.status || "").toLowerCase();
       if (statusFilter === "pending" && orderStatus !== "pending") return false;
       if (statusFilter === "confirmed" && orderStatus !== "confirmed") return false;
-      if (statusFilter === "processing" && !["processing", "shipped", "on the way", "out for delivery"].includes(orderStatus)) return false;
-      if (statusFilter === "completed" && orderStatus !== "delivered" && orderStatus !== "completed") return false;
+      if (statusFilter === "processing" && !["processing", "ready to ship", "shipped"].includes(orderStatus)) return false;
+      if (statusFilter === "completed" && orderStatus !== "delivered") return false;
       if (statusFilter === "cancelled" && orderStatus !== "cancelled") return false;
     }
 
@@ -145,13 +168,12 @@ export default function AdminOrders() {
   });
 
   const getStatusStyles = (status: string) => {
-    switch (status) {
+    switch (status?.toLowerCase()) {
       case "pending": return "bg-amber-50 text-amber-600 border-amber-100";
       case "confirmed": return "bg-blue-50 text-blue-600 border-blue-100";
       case "processing": return "bg-indigo-50 text-indigo-600 border-indigo-100";
-      case "shipped": return "bg-indigo-50 text-indigo-600 border-indigo-100";
-      case "on the way": return "bg-cyan-50 text-cyan-600 border-cyan-100";
-      case "out for delivery": return "bg-purple-50 text-purple-600 border-purple-100";
+      case "ready to ship": return "bg-pink-50 text-pink-600 border-pink-100";
+      case "shipped": return "bg-purple-50 text-purple-600 border-purple-100";
       case "delivered": return "bg-green-50 text-green-600 border-green-100";
       case "cancelled": return "bg-red-50 text-red-600 border-red-100";
       default: return "bg-amber-50 text-amber-600 border-amber-100";
@@ -318,11 +340,15 @@ export default function AdminOrders() {
                     onClick={(e) => e.stopPropagation()}
                     className={`appearance-none px-4 py-1.5 pr-10 rounded-full text-[10px] font-black uppercase tracking-widest cursor-pointer transition-all border outline-none ${getStatusStyles(order.status)} ${updatingId === order.id ? "opacity-50 animate-pulse" : ""}`}
                   >
-                    {ORDER_STATUSES.map(s => (
-                      <option key={s} value={s} className={getStatusStyles(s)}>
-                        {s}
-                      </option>
-                    ))}
+                    {ORDER_STATUSES.map(s => {
+                      const isDisabled = s.toLowerCase() === "cancelled" && 
+                        ["shipped", "delivered"].includes(order.status?.toLowerCase() || "");
+                      return (
+                        <option key={s} value={s} disabled={isDisabled} className={getStatusStyles(s)}>
+                          {s}
+                        </option>
+                      );
+                    })}
                   </select>
                   <ChevronDown size={10} className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none opacity-40" />
                 </div>
@@ -504,8 +530,90 @@ export default function AdminOrders() {
                               <span>Grand Total</span>
                               <span className="text-brand-accent">₹{order.totalAmount.toLocaleString()}</span>
                             </div>
+
+                            {/* Shipping Info Action Button */}
+                            <div className="pt-4 border-t border-brand/10 mt-4">
+                              <button
+                                disabled={order.status?.toLowerCase() !== "ready to ship"}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setSelectedOrderForShipping(order);
+                                  setShippingForm({
+                                    courierServiceName: order.courierServiceName || "",
+                                    courierId: order.courierId || "",
+                                    trackingNumber: order.trackingNumber || "",
+                                    trackingLink: order.trackingLink || "",
+                                    estimatedDeliveryDate: order.estimatedDeliveryDate 
+                                      ? new Date(order.estimatedDeliveryDate).toISOString().split('T')[0]
+                                      : "",
+                                    shippingNotes: order.shippingNotes || ""
+                                  });
+                                  setShowShippingModal(true);
+                                }}
+                                className="w-full bg-[#1B3022] hover:bg-[#1B3022]/90 disabled:bg-[#1B3022]/20 disabled:text-brand/40 disabled:cursor-not-allowed text-[#C5A059] hover:text-[#C5A059]/90 disabled:text-[#C5A059]/30 font-black text-[10px] uppercase tracking-widest rounded-2xl py-3 px-6 transition-all flex items-center justify-center space-x-2 cursor-pointer shadow-sm border border-[#C5A059]/20"
+                              >
+                                <Truck size={14} />
+                                <span>Add shipping Info</span>
+                              </button>
+                            </div>
                           </div>
                         </div>
+
+                        {/* Shipping Details (Admin view) */}
+                        {order.courierServiceName && order.trackingNumber && (
+                          <div className="bg-[#1B3022]/5 border border-[#1B3022]/10 rounded-3xl p-6 mt-4 space-y-4 text-brand">
+                            <h5 className="text-[10px] font-black uppercase tracking-[0.2em] mb-2 flex items-center gap-1.5 text-[#C5A059]">
+                              🚚 Shipping Details
+                            </h5>
+                             <div className="grid grid-cols-2 gap-4 text-xs">
+                              <div>
+                                <span className="font-semibold text-brand/60 uppercase text-[9px] tracking-wider block">Courier Service</span>
+                                <span className="font-bold text-brand">{order.courierServiceName}</span>
+                              </div>
+                              {order.courierId && (
+                                <div>
+                                  <span className="font-semibold text-brand/60 uppercase text-[9px] tracking-wider block">Courier ID</span>
+                                  <span className="font-bold text-brand">{order.courierId}</span>
+                                </div>
+                              )}
+                              <div>
+                                <span className="font-semibold text-brand/60 uppercase text-[9px] tracking-wider block">Tracking Number</span>
+                                <span className="font-bold text-brand">{order.trackingNumber}</span>
+                              </div>
+                              {order.trackingLink && (
+                                <div>
+                                  <span className="font-semibold text-brand/60 uppercase text-[9px] tracking-wider block mb-1">Tracking Link</span>
+                                  <a 
+                                    href={order.trackingLink} 
+                                    target="_blank" 
+                                    rel="noopener noreferrer" 
+                                    className="text-[#C5A059] hover:underline font-bold"
+                                  >
+                                    Track Package →
+                                  </a>
+                                </div>
+                              )}
+                              {order.estimatedDeliveryDate && (
+                                <div>
+                                  <span className="font-semibold text-brand/60 uppercase text-[9px] tracking-wider block">Estimated Delivery</span>
+                                  <span className="font-bold text-[#C5A059]">
+                                    {new Date(order.estimatedDeliveryDate).toLocaleDateString('en-US', {
+                                      month: 'short',
+                                      day: 'numeric',
+                                      year: 'numeric'
+                                    })}
+                                  </span>
+                                </div>
+                              )}
+                              {order.shippingNotes && (
+                                <div className="col-span-2 border-t border-[#1B3022]/10 pt-2">
+                                  <span className="font-semibold text-brand/40 uppercase text-[9px] tracking-wider block mb-1">Shipping Notes</span>
+                                  <span className="italic text-brand/70">{order.shippingNotes}</span>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -514,6 +622,199 @@ export default function AdminOrders() {
             </div>
           );
         })}
+        </div>
+      )}
+
+      {toast && (
+        <div className="fixed bottom-10 left-1/2 -translate-x-1/2 z-50 bg-[#1B3022] text-[#C5A059] px-8 py-4 rounded-2xl shadow-2xl flex items-center space-x-3 font-bold text-sm border border-[#C5A059]/20 animate-in fade-in slide-in-from-bottom-5 duration-300">
+          <CheckCircle2 size={18} /><span>{toast}</span>
+        </div>
+      )}
+
+      {/* ─── ADD SHIPPING INFO MODAL ────────────────────────── */}
+      {showShippingModal && selectedOrderForShipping && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
+          <div 
+            className="absolute inset-0 bg-brand/40 backdrop-blur-sm" 
+            onClick={() => !isSubmittingShipping && setShowShippingModal(false)} 
+          />
+          <div className="relative w-full max-w-xl bg-white rounded-[2.5rem] shadow-2xl border border-brand/5 overflow-hidden animate-in zoom-in-95 duration-200">
+            {/* Header */}
+            <div className="p-8 border-b border-brand/5 flex items-center justify-between bg-brand/5">
+              <div>
+                <h3 className="text-xl font-playfair font-bold text-brand flex items-center gap-2">
+                  <Truck className="text-[#C5A059]" size={20} />
+                  Add Shipping Info
+                </h3>
+                <p className="text-[10px] text-brand/40 font-bold uppercase tracking-widest mt-1">
+                  Order #AS-{selectedOrderForShipping.id}
+                </p>
+              </div>
+              <button 
+                onClick={() => setShowShippingModal(false)}
+                disabled={isSubmittingShipping}
+                className="p-2 rounded-full hover:bg-brand/5 text-brand/40 hover:text-brand transition-colors cursor-pointer"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            {/* Form */}
+            <form onSubmit={async (e) => {
+              e.preventDefault();
+              if (!shippingForm.courierServiceName || !shippingForm.trackingNumber || !shippingForm.estimatedDeliveryDate) {
+                showToast("Please fill all required fields");
+                return;
+              }
+              setIsSubmittingShipping(true);
+              try {
+                const res = await fetch(`/api/admin/orders/${selectedOrderForShipping.id}/shipping`, {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({
+                    courierServiceName: shippingForm.courierServiceName,
+                    courierId: shippingForm.courierId || null,
+                    trackingNumber: shippingForm.trackingNumber,
+                    trackingLink: shippingForm.trackingLink || null,
+                    estimatedDeliveryDate: shippingForm.estimatedDeliveryDate,
+                    shippingNotes: shippingForm.shippingNotes || null,
+                  })
+                });
+                const data = await res.json();
+                if (data.success) {
+                  showToast("Shipping info added successfully!");
+                  setShowShippingModal(false);
+                  fetchOrders();
+                } else {
+                  showToast(data.error || "Failed to save shipping info");
+                }
+              } catch (err) {
+                console.error(err);
+                showToast("Something went wrong");
+              } finally {
+                setIsSubmittingShipping(false);
+              }
+            }} className="p-8 space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Courier Service Name */}
+                <div>
+                  <label className="block text-[10px] font-black text-brand/40 uppercase tracking-widest mb-2">
+                    Courier Service Name <span className="text-red-500">*</span>
+                  </label>
+                  <input 
+                    type="text" 
+                    required
+                    value={shippingForm.courierServiceName}
+                    onChange={(e) => setShippingForm(prev => ({ ...prev, courierServiceName: e.target.value }))}
+                    placeholder="e.g. Blue Dart, Delhivery"
+                    className="w-full bg-white border border-brand/10 rounded-2xl py-3.5 px-4 text-xs font-bold text-brand focus:outline-none focus:ring-4 focus:ring-[#C5A059]/5 transition-all shadow-sm"
+                  />
+                </div>
+
+                {/* Courier ID */}
+                <div>
+                  <label className="block text-[10px] font-black text-brand/40 uppercase tracking-widest mb-2">
+                    Courier ID / Code
+                  </label>
+                  <input 
+                    type="text"
+                    value={shippingForm.courierId}
+                    onChange={(e) => setShippingForm(prev => ({ ...prev, courierId: e.target.value }))}
+                    placeholder="e.g. BD_EXP"
+                    className="w-full bg-white border border-brand/10 rounded-2xl py-3.5 px-4 text-xs font-bold text-brand focus:outline-none focus:ring-4 focus:ring-[#C5A059]/5 transition-all shadow-sm"
+                  />
+                </div>
+
+                {/* Tracking Number */}
+                <div>
+                  <label className="block text-[10px] font-black text-brand/40 uppercase tracking-widest mb-2">
+                    Tracking Number <span className="text-red-500">*</span>
+                  </label>
+                  <input 
+                    type="text"
+                    required
+                    value={shippingForm.trackingNumber}
+                    onChange={(e) => setShippingForm(prev => ({ ...prev, trackingNumber: e.target.value }))}
+                    placeholder="e.g. 1234567890"
+                    className="w-full bg-white border border-brand/10 rounded-2xl py-3.5 px-4 text-xs font-bold text-brand focus:outline-none focus:ring-4 focus:ring-[#C5A059]/5 transition-all shadow-sm"
+                  />
+                </div>
+
+                {/* Tracking Link */}
+                <div>
+                  <label className="block text-[10px] font-black text-brand/40 uppercase tracking-widest mb-2">
+                    Tracking Link
+                  </label>
+                  <input 
+                    type="url"
+                    value={shippingForm.trackingLink}
+                    onChange={(e) => setShippingForm(prev => ({ ...prev, trackingLink: e.target.value }))}
+                    placeholder="e.g. https://track.bluedart.com/..."
+                    className="w-full bg-white border border-brand/10 rounded-2xl py-3.5 px-4 text-xs font-bold text-brand focus:outline-none focus:ring-4 focus:ring-[#C5A059]/5 transition-all shadow-sm"
+                  />
+                </div>
+
+                {/* Estimated Delivery Date */}
+                <div className="md:col-span-2">
+                  <label className="block text-[10px] font-black text-brand/40 uppercase tracking-widest mb-2">
+                    Estimated Delivery Date <span className="text-red-500">*</span>
+                  </label>
+                  <div className="relative">
+                    <input 
+                      type="date"
+                      required
+                      value={shippingForm.estimatedDeliveryDate}
+                      onChange={(e) => setShippingForm(prev => ({ ...prev, estimatedDeliveryDate: e.target.value }))}
+                      className="w-full bg-white border border-brand/10 rounded-2xl py-3.5 px-4 text-xs font-bold text-brand focus:outline-none focus:ring-4 focus:ring-[#C5A059]/5 transition-all shadow-sm"
+                    />
+                  </div>
+                </div>
+
+                {/* Shipping Notes */}
+                <div className="md:col-span-2">
+                  <label className="block text-[10px] font-black text-brand/40 uppercase tracking-widest mb-2">
+                    Shipping Notes / Dispatch Notes
+                  </label>
+                  <textarea 
+                    rows={3}
+                    value={shippingForm.shippingNotes}
+                    onChange={(e) => setShippingForm(prev => ({ ...prev, shippingNotes: e.target.value }))}
+                    placeholder="e.g. Signature required, deliver after 2 PM..."
+                    className="w-full bg-white border border-brand/10 rounded-2xl py-3.5 px-4 text-xs font-bold text-brand focus:outline-none focus:ring-4 focus:ring-[#C5A059]/5 transition-all shadow-sm resize-none"
+                  />
+                </div>
+              </div>
+
+              {/* Submit Buttons */}
+              <div className="flex items-center space-x-4 pt-4 border-t border-brand/5">
+                <button
+                  type="button"
+                  disabled={isSubmittingShipping}
+                  onClick={() => setShowShippingModal(false)}
+                  className="flex-1 py-3.5 bg-brand/5 text-brand/60 hover:text-brand disabled:opacity-40 font-black text-[10px] uppercase tracking-widest rounded-2xl cursor-pointer border border-brand/5 hover:bg-brand/10 transition-all text-center"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={isSubmittingShipping}
+                  className="flex-1 py-3.5 bg-brand text-white hover:bg-brand/90 disabled:opacity-40 font-black text-[10px] uppercase tracking-widest rounded-2xl cursor-pointer shadow-lg hover:shadow-xl transition-all text-center flex items-center justify-center gap-2"
+                >
+                  {isSubmittingShipping ? (
+                    <>
+                      <Loader2 className="animate-spin" size={14} />
+                      <span>Saving...</span>
+                    </>
+                  ) : (
+                    <>
+                      <CheckCircle2 size={14} />
+                      <span>Confirm & Ship</span>
+                    </>
+                  )}
+                </button>
+              </div>
+            </form>
+          </div>
         </div>
       )}
     </div>

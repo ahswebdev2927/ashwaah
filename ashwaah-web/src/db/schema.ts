@@ -101,7 +101,7 @@ export const orders = sqliteTable("orders", {
   id: integer("id").primaryKey({ autoIncrement: true }),
   userId: integer("user_id").references(() => users.id),
   totalAmount: real("total_amount").notNull(),
-  status: text("status").default("payment_pending"), // payment_pending, pending, confirmed, processing, shipped, delivered, cancelled
+  status: text("status").default("payment_pending"), // payment_pending, pending, Confirmed, Processing, Ready to Ship, Shipped, Delivered, Cancelled
   shippingAddress: text("shipping_address"),
   couponCode: text("coupon_code"),
   discountAmount: real("discount_amount"),
@@ -109,6 +109,12 @@ export const orders = sqliteTable("orders", {
   razorpayPaymentId: text("razorpay_payment_id"),
   razorpaySignature: text("razorpay_signature"),
   paymentStatus: text("payment_status").default("pending"), // pending, paid
+  courierServiceName: text("courier_service_name"),
+  courierId: text("courier_id"),
+  trackingNumber: text("tracking_number"),
+  trackingLink: text("tracking_link"),
+  estimatedDeliveryDate: integer("estimated_delivery_date", { mode: "timestamp" }),
+  shippingNotes: text("shipping_notes"),
   createdAt: text("created_at").$defaultFn(() => new Date().toISOString()),
 });
 

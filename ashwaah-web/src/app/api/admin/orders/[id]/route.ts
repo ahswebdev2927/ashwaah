@@ -25,6 +25,24 @@ export async function PATCH(
       return NextResponse.json({ success: false, error: "Status is required" }, { status: 400 });
     }
 
+    // Fetch current order status
+    const currentOrder = await db.select({ status: orders.status })
+      .from(orders)
+      .where(eq(orders.id, orderId))
+      .limit(1);
+
+    if (!currentOrder.length) {
+      return NextResponse.json({ success: false, error: "Order not found" }, { status: 404 });
+    }
+
+    const currentStatus = currentOrder[0].status?.toLowerCase() || "";
+    if (status.toLowerCase() === "cancelled" && (currentStatus === "shipped" || currentStatus === "delivered")) {
+      return NextResponse.json(
+        { success: false, error: "Cannot cancel an order that has already been shipped or delivered" },
+        { status: 400 }
+      );
+    }
+
     await db.update(orders)
       .set({ status })
       .where(eq(orders.id, orderId));

@@ -61,7 +61,7 @@ export async function GET(request: Request) {
       const toDeliver = productOrderItems
         .filter(item => 
           item.status && 
-          ["pending", "confirmed", "processing", "shipped", "on the way", "out for delivery"].includes(item.status.toLowerCase())
+          ["pending", "confirmed", "processing", "ready to ship", "shipped"].includes(item.status.toLowerCase())
         )
         .reduce((sum, item) => sum + (item.quantity || 0), 0);
 
@@ -270,7 +270,7 @@ export async function DELETE(request: Request) {
       .all();
 
     // 2. Block deletion only if there are ACTIVE (non-completed) orders
-    const activeStatuses = ["pending", "confirmed", "processing", "shipped", "on the way", "out for delivery"];
+    const activeStatuses = ["pending", "confirmed", "processing", "ready to ship", "shipped"];
     const hasActiveOrders = relatedOrderItems.some(
       (item) => item.status && activeStatuses.includes(item.status.toLowerCase())
     );

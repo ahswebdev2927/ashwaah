@@ -32,6 +32,12 @@ interface Order {
   couponTargetType: string | null;
   couponTargetValue: string | null;
   items: OrderItem[];
+  courierServiceName?: string | null;
+  courierId?: string | null;
+  trackingNumber?: string | null;
+  trackingLink?: string | null;
+  estimatedDeliveryDate?: string | null;
+  shippingNotes?: string | null;
 }
 
 const isProductCouponMatch = (item: OrderItem, couponCode: string | null, targetType: string | null, targetValue: string | null) => {
@@ -95,11 +101,11 @@ const parseAddress = (addrString: string | null) => {
 };
 
 const MILESTONES = [
-  "confirmed",
-  "shipped",
-  "on the way",
-  "out for delivery",
-  "delivered"
+  "Confirmed",
+  "Processing",
+  "Ready to Ship",
+  "Shipped",
+  "Delivered"
 ];
 
 export default function MyOrdersPage() {
@@ -246,25 +252,32 @@ export default function MyOrdersPage() {
                 </div>
 
                 {/* Delivery Milestones Tracker */}
-                {order.status !== "cancelled" && (
+                {order.status?.toLowerCase() !== "cancelled" && order.status?.toLowerCase() !== "payment_pending" && (
                   <div className="px-10 md:px-24 lg:px-32 pb-8 pt-4">
                     <div className="relative">
                       {/* Background Line */}
                       <div className="absolute top-1/2 left-0 w-full h-[1px] bg-brand/10 -translate-y-1/2 rounded-full" />
                       
                       {/* Active Progress Line */}
-                      <div 
-                        className="absolute top-1/2 left-0 h-[2px] bg-[#C5A059] -translate-y-1/2 rounded-full transition-all duration-1000 ease-out shadow-[0_0_12px_rgba(197,160,89,0.4)]" 
-                        style={{ 
-                          width: `${Math.max(0, (MILESTONES.indexOf(order.status) / (MILESTONES.length - 1)) * 100)}%` 
-                        }} 
-                      />
+                      {(() => {
+                        const milestoneIndex = MILESTONES.map(m => m.toLowerCase()).indexOf(order.status?.toLowerCase() || "");
+                        return (
+                          <div 
+                            className="absolute top-1/2 left-0 h-[2px] bg-[#C5A059] -translate-y-1/2 rounded-full transition-all duration-1000 ease-out shadow-[0_0_12px_rgba(197,160,89,0.4)]" 
+                            style={{ 
+                              width: `${milestoneIndex === -1 ? 0 : (milestoneIndex / (MILESTONES.length - 1)) * 100}%` 
+                            }} 
+                          />
+                        );
+                      })()}
 
                       {/* Milestone Dots */}
                       <div className="relative flex justify-between">
                         {MILESTONES.map((m, idx) => {
-                          const isCompleted = MILESTONES.indexOf(order.status) >= idx;
-                          const isCurrent = order.status === m;
+                          const lowerMilestones = MILESTONES.map(ms => ms.toLowerCase());
+                          const currentStatusLower = order.status?.toLowerCase() || "";
+                          const isCompleted = lowerMilestones.indexOf(currentStatusLower) >= idx;
+                          const isCurrent = currentStatusLower === m.toLowerCase();
                           return (
                             <div key={m} className="flex flex-col items-center">
                               <div className={`w-2 h-2 rounded-full border-2 transition-all duration-500 ${
@@ -396,6 +409,66 @@ export default function MyOrdersPage() {
                     {/* Right Column: Delivery Address & Cancel Option */}
                     <div className="lg:col-span-4 lg:border-l border-brand/5 lg:pl-8 space-y-6 pt-6 lg:pt-0">
                       <div className="space-y-6">
+                        {/* Shipping Details Card */}
+                        {["shipped", "delivered"].includes(order.status?.toLowerCase() || "") && (
+                          <div className="space-y-2">
+                            <h5 className="text-[9px] font-black uppercase tracking-widest text-[#C5A059] flex items-center gap-1.5">
+                              🚚 Shipping Details
+                            </h5>
+                            <div className="bg-[#1B3022]/5 border border-[#1B3022]/10 rounded-2xl p-4 space-y-3 text-brand">
+                              {order.courierServiceName && (
+                                <p className="text-xs text-brand/80">
+                                  <strong className="text-brand font-black uppercase tracking-wider text-[10px]">Courier:</strong>{" "}
+                                  {order.courierServiceName}
+                                </p>
+                              )}
+                              {order.courierId && (
+                                <p className="text-xs text-brand/80">
+                                  <strong className="text-brand font-black uppercase tracking-wider text-[10px]">Courier ID:</strong>{" "}
+                                  {order.courierId}
+                                </p>
+                              )}
+                              {order.trackingNumber && (
+                                <p className="text-xs text-brand/80">
+                                  <strong className="text-brand font-black uppercase tracking-wider text-[10px]">Tracking Number:</strong>{" "}
+                                  {order.trackingNumber}
+                                </p>
+                              )}
+                              {order.trackingLink && (
+                                <p className="text-xs">
+                                  <strong className="text-brand font-black uppercase tracking-wider text-[10px] block mb-1">Track Shipment:</strong>
+                                  <a 
+                                    href={order.trackingLink} 
+                                    target="_blank" 
+                                    rel="noopener noreferrer"
+                                    className="inline-flex items-center gap-1 text-[#C5A059] hover:underline text-xs font-bold"
+                                  >
+                                    View Shipment Progress →
+                                  </a>
+                                </p>
+                              )}
+                              {order.estimatedDeliveryDate && (
+                                <p className="text-xs text-brand/80">
+                                  <strong className="text-brand font-black uppercase tracking-wider text-[10px]">Estimated Delivery:</strong>{" "}
+                                  <span className="text-[#C5A059] font-bold">
+                                    Arriving by {new Date(order.estimatedDeliveryDate).toLocaleDateString('en-US', {
+                                      month: 'short',
+                                      day: 'numeric',
+                                      year: 'numeric'
+                                    })}
+                                  </span>
+                                </p>
+                              )}
+                              {order.shippingNotes && (
+                                <div className="border-t border-[#1B3022]/10 pt-2">
+                                  <p className="text-[10px] text-brand/50 font-bold uppercase tracking-wider mb-1">Notes</p>
+                                  <p className="text-[11px] italic text-brand/70">{order.shippingNotes}</p>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        )}
+
                         {/* Shipping Address */}
                         <div className="space-y-2">
                           <h5 className="text-[9px] font-black uppercase tracking-widest text-brand/40 flex items-center gap-1.5">
@@ -426,7 +499,7 @@ export default function MyOrdersPage() {
                         </div>
 
                         {/* Cancel Order Action */}
-                        {order.status === "pending" && (
+                        {(order.status?.toLowerCase() === "pending" || order.status?.toLowerCase() === "confirmed") && (
                           <div className="space-y-2">
                             <h5 className="text-[9px] font-black uppercase tracking-widest text-brand/40">Manage Order</h5>
                             <div className="bg-brand/5 border border-brand/5 rounded-2xl p-4">
@@ -464,7 +537,7 @@ export default function MyOrdersPage() {
                           </div>
                         )}
 
-                        {order.status === "cancelled" && (
+                        {order.status?.toLowerCase() === "cancelled" && (
                           <div className="flex items-center space-x-3 px-6 py-4 rounded-2xl bg-red-50 border border-red-100 text-red-600">
                             <AlertTriangle size={18} />
                             <div>
