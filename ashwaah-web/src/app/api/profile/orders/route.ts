@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { db } from "@/db";
 import { orders, orderItems, products, users, coupons, productVariations } from "@/db/schema";
-import { eq, desc } from "drizzle-orm";
+import { eq, desc, ne, and } from "drizzle-orm";
 import { getVerifiedPhoneFromCookie } from "@/db/auth-helper";
 
 export async function GET() {
@@ -32,7 +32,7 @@ export async function GET() {
     })
     .from(orders)
     .leftJoin(coupons, eq(orders.couponCode, coupons.code))
-    .where(eq(orders.userId, user.id))
+    .where(and(eq(orders.userId, user.id), ne(orders.status, "payment_pending")))
     .orderBy(desc(orders.createdAt));
 
     // For each order, fetch items

@@ -2,7 +2,7 @@ import { verifyAdminRequest } from "@/utils/auth";
 import { NextResponse } from "next/server";
 import { db } from "@/db";
 import { orders, orderItems, products, users } from "@/db/schema";
-import { eq, desc } from "drizzle-orm";
+import { eq, desc, ne } from "drizzle-orm";
 
 async function isAdmin(request?: Request) {
   return !!(await verifyAdminRequest(request));
@@ -27,6 +27,7 @@ export async function GET(request: Request) {
     })
     .from(orders)
     .leftJoin(users, eq(orders.userId, users.id))
+    .where(ne(orders.status, "payment_pending"))
     .orderBy(desc(orders.createdAt));
 
     // For each order, fetch items
