@@ -329,11 +329,10 @@ export default function Home() {
                     key={idx}
                     type="button"
                     onClick={() => setCurrentBannerIndex(idx)}
-                    className={`w-2 h-2 rounded-full transition-all duration-300 ${
-                      idx === currentBannerIndex
+                    className={`w-2 h-2 rounded-full transition-all duration-300 ${idx === currentBannerIndex
                         ? "bg-[#C5A059] w-6"
                         : "bg-white/60 hover:bg-white"
-                    }`}
+                      }`}
                   />
                 ))}
               </div>
@@ -348,7 +347,7 @@ export default function Home() {
         <section className="w-full mx-auto mt-12 mb-4 relative group">
 
 
-          <div 
+          <div
             ref={carouselRef}
             onMouseEnter={() => setIsHovered(true)}
             onMouseLeave={() => setIsHovered(false)}
@@ -357,7 +356,7 @@ export default function Home() {
             className="flex gap-6 overflow-x-auto pb-6 pt-4 px-8 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
           >
             {isLoading ? (
-               Array.from({ length: 4 }).map((_, i) => (
+              Array.from({ length: 4 }).map((_, i) => (
                 <div key={i} className="flex flex-col items-center shrink-0 animate-pulse">
                   <div className="w-32 h-32 md:w-48 md:h-48 rounded-xl bg-brand/5 mb-4"></div>
                   <div className="h-4 w-20 bg-brand/5 rounded-full"></div>
@@ -365,16 +364,16 @@ export default function Home() {
               ))
             ) : (
               [...navItems, ...navItems].map((item, index) => (
-                <Link 
-                  key={`${item.id}-${index}`} 
-                  href={item.href} 
+                <Link
+                  key={`${item.id}-${index}`}
+                  href={item.href}
                   className="group flex flex-col items-center shrink-0"
                 >
                   <div className="w-32 h-32 md:w-48 md:h-48 rounded-xl overflow-hidden border-2 border-[#064e3b]/30 shadow-lg transition-transform duration-500 group-hover:scale-105 group-hover:border-[#064e3b] group-hover:shadow-[#064e3b]/20 relative">
-                    <img 
-                      src={item.imageUrl || "/images/placeholder.png"} 
-                      alt={item.label} 
-                      className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" 
+                    <img
+                      src={item.imageUrl || "/images/placeholder.png"}
+                      alt={item.label}
+                      className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                       onError={e => {
                         e.currentTarget.onerror = null;
                         e.currentTarget.src = "/images/placeholder.png";
@@ -394,7 +393,7 @@ export default function Home() {
         {homepageCatCards.length > 0 && (
           <section className="w-full mx-auto mb-4">
             {/* Categories Heading */}
-            <motion.div 
+            <motion.div
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
@@ -411,10 +410,10 @@ export default function Home() {
               {homepageCatCards.map((item) => {
                 const CardContent = (
                   <div className="group relative w-full aspect-[4/5] rounded-3xl overflow-hidden shadow-lg border border-brand/5 flex flex-col justify-end transition-all duration-500 hover:scale-[1.03] hover:shadow-xl">
-                    <img 
-                      src={item.imageUrl} 
-                      alt={item.name} 
-                      className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" 
+                    <img
+                      src={item.imageUrl}
+                      alt={item.name}
+                      className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                       onError={e => {
                         e.currentTarget.onerror = null;
                         e.currentTarget.src = "/images/placeholder.png";
@@ -422,7 +421,7 @@ export default function Home() {
                     />
                     {/* Shadow overlay for depth */}
                     <div className="absolute inset-0 bg-gradient-to-t from-black/25 via-transparent to-transparent pointer-events-none"></div>
-                    
+
                     {/* Overlaid coral-orange card at bottom */}
                     <div className="relative z-10 w-full p-3 bg-[#064e3b]/90 backdrop-blur-sm text-white rounded-t-2xl text-center transition-all duration-300 group-hover:bg-[#064e3b] flex flex-col items-center justify-center">
                       <span className="text-[9px] md:text-[10px] tracking-wider uppercase font-medium text-center w-full block break-words">
