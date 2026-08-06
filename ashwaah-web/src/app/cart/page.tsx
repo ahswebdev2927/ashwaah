@@ -266,39 +266,110 @@ export default function CartPage() {
     }
   };
 
-  const processDummyPayment = async () => {
+  const loadRazorpayScript = () => {
+    return new Promise((resolve) => {
+      const script = document.createElement("script");
+      script.src = "https://checkout.razorpay.com/v1/checkout.js";
+      script.onload = () => resolve(true);
+      script.onerror = () => resolve(false);
+      document.body.appendChild(script);
+    });
+  };
+
+  const processRazorpayPayment = async () => {
     setIsProcessingPayment(true);
     setPaymentStep("processing");
 
-    // Simulate network delay
-    await new Promise(resolve => setTimeout(resolve, 2500));
+    // 1. Load Razorpay script
+    const scriptLoaded = await loadRazorpayScript();
+    if (!scriptLoaded) {
+      alert("Failed to load Razorpay payment gateway. Please check your internet connection.");
+      setPaymentStep("details");
+      setIsProcessingPayment(false);
+      return;
+    }
 
     try {
-      const res = await fetch("/api/checkout", {
+      const shippingAddr = showNewAddressForm 
+        ? `Name: ${address.fullName}, Street: ${address.street}, City: ${address.city}, State: ${address.state}, Pincode: ${address.pincode}, Contact: ${address.phone}`
+        : savedAddresses[selectedAddressIndex || 0];
+
+      // 2. Request order initialization from our backend
+      const res = await fetch("/api/checkout/razorpay", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           items,
-          totalAmount: total,
-          paymentMethod: "online_prepaid",
+          shippingAddress: shippingAddr,
           couponCode: appliedCoupon?.code || null,
-          shippingAddress: showNewAddressForm 
-            ? `Name: ${address.fullName}, Street: ${address.street}, City: ${address.city}, State: ${address.state}, Pincode: ${address.pincode}, Contact: ${address.phone}`
-            : savedAddresses[selectedAddressIndex || 0]
         })
       });
       
       const data = await res.json();
-      if (data.success) {
-        clearCart();
-        router.push("/profile/orders");
-      } else {
-        alert("Checkout failed: " + data.error);
+      if (!data.success) {
+        alert("Payment initialization failed: " + data.error);
         setPaymentStep("details");
         setIsProcessingPayment(false);
+        return;
       }
+
+      // 3. Configure Razorpay Options
+      const options = {
+        key: data.keyId,
+        amount: data.amount,
+        currency: data.currency,
+        name: "Ashwaah",
+        description: "Bespoke Apparel Payment",
+        order_id: data.razorpayOrderId,
+        theme: {
+          color: "#C5A059", // Match brand accent color
+        },
+        handler: async function (response: any) {
+          // Re-enter processing state during signature verification
+          setPaymentStep("processing");
+          setIsProcessingPayment(true);
+          try {
+            const verifyRes = await fetch("/api/checkout/verify", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                razorpayOrderId: response.razorpay_order_id,
+                razorpayPaymentId: response.razorpay_payment_id,
+                razorpaySignature: response.razorpay_signature,
+              }),
+            });
+            const verifyData = await verifyRes.json();
+            if (verifyData.success) {
+              clearCart();
+              router.push("/profile/orders");
+            } else {
+              alert("Payment verification failed: " + verifyData.error);
+              setPaymentStep("details");
+              setIsProcessingPayment(false);
+            }
+          } catch (e) {
+            console.error("Signature verification failed:", e);
+            alert("Something went wrong verifying the payment. Please contact support.");
+            setPaymentStep("details");
+            setIsProcessingPayment(false);
+          }
+        },
+        modal: {
+          ondismiss: function () {
+            setPaymentStep("details");
+            setIsProcessingPayment(false);
+          }
+        },
+        prefill: {
+          contact: address.phone || "",
+        }
+      };
+
+      // 4. Launch Razorpay popup
+      const rzp = new (window as any).Razorpay(options);
+      rzp.open();
     } catch (error) {
-      console.error("Error during checkout:", error);
+      console.error("Error starting checkout:", error);
       alert("Something went wrong. Please try again.");
       setPaymentStep("details");
       setIsProcessingPayment(false);
@@ -898,10 +969,10 @@ export default function CartPage() {
                       Cancel
                     </button>
                     <button 
-                      onClick={processDummyPayment}
+                      onClick={processRazorpayPayment}
                       className="flex-[2] py-4 bg-brand text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-brand-hover shadow-lg transition-all active:scale-95"
                     >
-                      Pay Now (Dummy)
+                      Pay Now
                     </button>
                   </div>
                 </div>
