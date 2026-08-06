@@ -49,6 +49,7 @@ export default function HoverImageCarousel({
             i === index ? "opacity-100 z-10" : "opacity-0 z-0"
           }`}
           onError={(e) => {
+            e.currentTarget.onerror = null;
             e.currentTarget.src = "/images/placeholder.png";
           }}
         />

@@ -24,6 +24,9 @@ export async function GET(request: Request) {
       customerPhone: users.phoneNumber,
       couponCode: orders.couponCode,
       discountAmount: orders.discountAmount,
+      paymentStatus: orders.paymentStatus,
+      razorpayOrderId: orders.razorpayOrderId,
+      razorpayPaymentId: orders.razorpayPaymentId,
     })
     .from(orders)
     .leftJoin(users, eq(orders.userId, users.id))

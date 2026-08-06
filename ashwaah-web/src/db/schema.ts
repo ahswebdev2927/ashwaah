@@ -101,13 +101,14 @@ export const orders = sqliteTable("orders", {
   id: integer("id").primaryKey({ autoIncrement: true }),
   userId: integer("user_id").references(() => users.id),
   totalAmount: real("total_amount").notNull(),
-  status: text("status").default("payment_pending"), // payment_pending, confirmed, processing, shipped, delivered, cancelled
+  status: text("status").default("payment_pending"), // payment_pending, pending, confirmed, processing, shipped, delivered, cancelled
   shippingAddress: text("shipping_address"),
   couponCode: text("coupon_code"),
   discountAmount: real("discount_amount"),
   razorpayOrderId: text("razorpay_order_id"),
   razorpayPaymentId: text("razorpay_payment_id"),
   razorpaySignature: text("razorpay_signature"),
+  paymentStatus: text("payment_status").default("pending"), // pending, paid
   createdAt: text("created_at").$defaultFn(() => new Date().toISOString()),
 });
 

@@ -1380,7 +1380,15 @@ export default function ProductManagement() {
                         <div className="grid grid-cols-4 sm:grid-cols-6 gap-3">
                           {currentImages.map((img, i) => (
                             <div key={i} className="relative aspect-square rounded-xl overflow-hidden border border-brand/10 group">
-                              <img src={img} alt={`${color}-img-${i}`} className="w-full h-full object-cover" onError={e => (e.currentTarget.src = "/images/placeholder.png")} />
+                              <img 
+                                src={img} 
+                                alt={`${color}-img-${i}`} 
+                                className="w-full h-full object-cover" 
+                                onError={e => {
+                                  e.currentTarget.onerror = null;
+                                  e.currentTarget.src = "/images/placeholder.png";
+                                }} 
+                              />
                               <button 
                                 type="button" 
                                 onClick={() => removeColorImage(color, i)} 
@@ -1542,7 +1550,15 @@ export default function ProductManagement() {
                   <div key={product.id} className={`bg-white rounded-2xl p-3 border transition-all duration-300 group ${isCurrentlyEditing ? "border-brand-accent shadow-lg" : "border-brand/5 hover:border-brand-accent/30 shadow-sm"}`}>
                     <div className="flex items-center space-x-3">
                       <div className="w-14 h-14 rounded-xl overflow-hidden bg-brand/5 border border-brand/5 flex-shrink-0 relative">
-                        <img src={firstImg} alt={product.name} className="w-full h-full object-cover" onError={e => (e.currentTarget.src = "/images/placeholder.png")} />
+                        <img 
+                          src={firstImg} 
+                          alt={product.name} 
+                          className="w-full h-full object-cover" 
+                          onError={e => {
+                            e.currentTarget.onerror = null;
+                            e.currentTarget.src = "/images/placeholder.png";
+                          }} 
+                        />
                       </div>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center space-x-2">

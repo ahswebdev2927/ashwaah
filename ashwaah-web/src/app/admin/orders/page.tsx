@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { ShoppingBag, Clock, CheckCircle2, Truck, Loader2, User, Phone, Ruler, ChevronDown, ChevronUp, Sparkles, Scissors, MapPin } from "lucide-react";
+import { ShoppingBag, Clock, CheckCircle2, Truck, Loader2, User, Phone, Ruler, ChevronDown, ChevronUp, Sparkles, Scissors, MapPin, CreditCard } from "lucide-react";
 
 interface OrderItem {
   id: number;
@@ -28,6 +28,9 @@ interface Order {
   couponCode: string | null;
   discountAmount: number | null;
   items: OrderItem[];
+  paymentStatus: string;
+  razorpayOrderId: string | null;
+  razorpayPaymentId: string | null;
 }
 
 function getProductImage(imagesStr: string | null) {
@@ -374,6 +377,46 @@ export default function AdminOrders() {
                           </p>
                         </div>
                       </div>
+
+                      {/* Payment Details */}
+                      <div className="space-y-6 pt-4">
+                        <h4 className="text-xs font-black text-brand uppercase tracking-widest flex items-center gap-2">
+                          <CreditCard size={14} className="text-brand-accent" /> Payment Details
+                        </h4>
+                        <div className="bg-white p-5 rounded-2xl border border-brand/5 space-y-4">
+                          <div className="flex items-center justify-between">
+                            <span className="text-[10px] font-bold text-brand/40 uppercase">Payment Status</span>
+                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-widest border ${
+                              order.paymentStatus === 'paid' 
+                                ? 'bg-green-500/10 text-green-600 border-green-500/20' 
+                                : 'bg-amber-500/10 text-amber-600 border-amber-500/20'
+                            }`}>
+                              {order.paymentStatus || 'pending'}
+                            </span>
+                          </div>
+                          
+                          <div className="flex items-center justify-between gap-4">
+                            <span className="text-[10px] font-bold text-brand/40 uppercase whitespace-nowrap">Razorpay Order ID</span>
+                            <span className="text-[10px] font-mono font-bold text-brand/70 truncate max-w-[150px]" title={order.razorpayOrderId || "N/A"}>
+                              {order.razorpayOrderId || "N/A"}
+                            </span>
+                          </div>
+
+                          <div className="flex items-center justify-between gap-4">
+                            <span className="text-[10px] font-bold text-brand/40 uppercase whitespace-nowrap">Payment ID</span>
+                            <span className="text-[10px] font-mono font-bold text-brand/70 truncate max-w-[150px]" title={order.razorpayPaymentId || "N/A"}>
+                              {order.razorpayPaymentId || "N/A"}
+                            </span>
+                          </div>
+
+                          <div className="flex items-center justify-between">
+                            <span className="text-[10px] font-bold text-brand/40 uppercase">Amount Received</span>
+                            <span className="text-xs font-black text-brand">
+                              {order.paymentStatus === 'paid' ? `₹${order.totalAmount.toLocaleString()}` : '₹0'}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
                     </div>
 
                     {/* Order Items */}
@@ -393,6 +436,7 @@ export default function AdminOrders() {
                                     alt={item.productName} 
                                     className="w-full h-full object-cover"
                                     onError={(e) => {
+                                      e.currentTarget.onerror = null;
                                       e.currentTarget.src = "/images/placeholder.png";
                                     }}
                                   />

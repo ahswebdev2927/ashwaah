@@ -256,7 +256,7 @@ export default function MyOrdersPage() {
                       <div 
                         className="absolute top-1/2 left-0 h-[2px] bg-[#C5A059] -translate-y-1/2 rounded-full transition-all duration-1000 ease-out shadow-[0_0_12px_rgba(197,160,89,0.4)]" 
                         style={{ 
-                          width: `${(MILESTONES.indexOf(order.status) / (MILESTONES.length - 1)) * 100}%` 
+                          width: `${Math.max(0, (MILESTONES.indexOf(order.status) / (MILESTONES.length - 1)) * 100)}%` 
                         }} 
                       />
 

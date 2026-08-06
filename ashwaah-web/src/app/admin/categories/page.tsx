@@ -408,6 +408,7 @@ export default function CategorySettingsPage() {
                     alt="Mockup Preview"
                     className="absolute inset-0 w-full h-full object-cover"
                     onError={(e) => {
+                      e.currentTarget.onerror = null;
                       e.currentTarget.src = "/images/placeholder.png";
                     }}
                   />
@@ -487,7 +488,10 @@ export default function CategorySettingsPage() {
                           src={item.imageUrl} 
                           alt={item.name} 
                           className="w-full h-full object-cover" 
-                          onError={e => (e.currentTarget.src = "/images/placeholder.png")}
+                          onError={e => {
+                            e.currentTarget.onerror = null;
+                            e.currentTarget.src = "/images/placeholder.png";
+                          }}
                         />
                       </div>
                       

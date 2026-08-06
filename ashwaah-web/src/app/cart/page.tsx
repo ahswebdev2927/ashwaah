@@ -934,30 +934,30 @@ export default function CartPage() {
                 </div>
 
                 <div className="space-y-6">
-                  <div className="bg-brand/5 p-6 rounded-2xl border border-brand/5">
-                    <div className="flex justify-between items-center mb-4">
-                      <span className="text-[10px] font-bold text-brand/40 uppercase tracking-widest">Order Amount</span>
-                      <span className="text-lg font-black text-brand tracking-widest">₹{total.toLocaleString()}</span>
+                  <div className="bg-brand/5 p-6 rounded-3xl border border-brand/5 space-y-4">
+                    <div className="flex justify-between items-center text-xs font-bold text-brand/60">
+                      <span>Subtotal</span>
+                      <span>₹{subtotal.toLocaleString()}</span>
                     </div>
+                    {discountAmount > 0 && (
+                      <div className="flex justify-between items-center text-xs font-bold text-green-600">
+                        <span>Discount Applied ({appliedCoupon?.code})</span>
+                        <span>- ₹{discountAmount.toLocaleString()}</span>
+                      </div>
+                    )}
+                    <div className="flex justify-between items-center text-xs font-bold text-brand/60">
+                      <span>Shipping</span>
+                      <span>Free</span>
+                    </div>
+                    
+                    <div className="border-t border-brand/10 pt-4 flex justify-between items-center">
+                      <span className="text-[10px] font-black text-brand uppercase tracking-widest">Grand Total</span>
+                      <span className="text-xl font-black text-brand tracking-widest">₹{total.toLocaleString()}</span>
+                    </div>
+
                     <div className="flex items-center space-x-2 text-[10px] font-bold text-green-600 bg-green-50 px-3 py-2 rounded-xl border border-green-100">
                       <ShieldCheck size={14} />
                       <span>End-to-End Encrypted Gateway</span>
-                    </div>
-                  </div>
-
-                  <div className="space-y-4">
-                    <p className="text-[10px] font-black text-brand uppercase tracking-[0.2em] border-b border-brand/5 pb-2">Select Payment Method</p>
-                    <div className="grid grid-cols-1 gap-3">
-                      {[
-                        { label: "UPI / PhonePe / GPay", active: true },
-                        { label: "Credit / Debit Card", active: false },
-                        { label: "Net Banking", active: false },
-                      ].map((m) => (
-                        <div key={m.label} className={`p-4 rounded-xl border flex items-center justify-between ${m.active ? 'border-brand-accent bg-brand-accent/5' : 'border-brand/5 opacity-50'}`}>
-                          <span className="text-xs font-bold text-brand">{m.label}</span>
-                          {m.active && <div className="w-4 h-4 rounded-full bg-brand-accent flex items-center justify-center"><CheckCircle2 size={10} className="text-white" /></div>}
-                        </div>
-                      ))}
                     </div>
                   </div>
 

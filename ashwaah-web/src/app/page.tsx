@@ -375,7 +375,10 @@ export default function Home() {
                       src={item.imageUrl || "/images/placeholder.png"} 
                       alt={item.label} 
                       className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" 
-                      onError={e => (e.currentTarget.src = "/images/placeholder.png")}
+                      onError={e => {
+                        e.currentTarget.onerror = null;
+                        e.currentTarget.src = "/images/placeholder.png";
+                      }}
                     />
                   </div>
                   <span className="mt-4 text-xs md:text-sm font-bold tracking-wide text-brand/80 group-hover:text-[#064e3b] transition-colors text-center w-full max-w-[12rem] break-words block">
@@ -412,7 +415,10 @@ export default function Home() {
                       src={item.imageUrl} 
                       alt={item.name} 
                       className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" 
-                      onError={e => (e.currentTarget.src = "/images/placeholder.png")}
+                      onError={e => {
+                        e.currentTarget.onerror = null;
+                        e.currentTarget.src = "/images/placeholder.png";
+                      }}
                     />
                     {/* Shadow overlay for depth */}
                     <div className="absolute inset-0 bg-gradient-to-t from-black/25 via-transparent to-transparent pointer-events-none"></div>

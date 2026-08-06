@@ -44,11 +44,12 @@ export async function POST(req: Request) {
     }
     const order = orderRows[0];
 
-    // Update order status to 'confirmed' and save transaction IDs
+    // Update order status to 'pending' (placed, awaiting admin confirmation) and paymentStatus to 'paid'
     await db
       .update(orders)
       .set({
-        status: "confirmed",
+        status: "pending",
+        paymentStatus: "paid",
         razorpayPaymentId: razorpayPaymentId,
         razorpaySignature: razorpaySignature,
       })

@@ -264,7 +264,15 @@ export default function AdminNavigation() {
                 <div className="flex gap-4 items-center">
                   {formData.imageUrl && (
                     <div className="w-12 h-12 rounded-xl overflow-hidden border border-brand/10 shrink-0">
-                      <img src={formData.imageUrl} alt="preview" className="w-full h-full object-cover" onError={e => (e.currentTarget.src = "/images/placeholder.png")} />
+                      <img 
+                        src={formData.imageUrl} 
+                        alt="preview" 
+                        className="w-full h-full object-cover" 
+                        onError={e => {
+                          e.currentTarget.onerror = null;
+                          e.currentTarget.src = "/images/placeholder.png";
+                        }} 
+                      />
                     </div>
                   )}
                   <div className="flex-1 flex gap-3">

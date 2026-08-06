@@ -63,6 +63,7 @@ export async function POST(req: Request) {
       couponCode: couponCode || null,
       discountAmount: discountAmount || 0,
       razorpayOrderId: rzpOrder.id,
+      paymentStatus: "pending",
       createdAt: new Date().toISOString(),
     }).returning();
 
