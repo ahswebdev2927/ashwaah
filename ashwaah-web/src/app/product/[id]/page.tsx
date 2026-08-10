@@ -59,7 +59,15 @@ const COLOR_MAP: Record<string, string> = {
   yellow: "#EAB308",
 };
 
+const getColorDisplayName = (color: string | null | undefined) => {
+  if (!color) return "";
+  return color.includes("::") ? color.split("::")[0] : color;
+};
+
 const getColorHex = (colorName: string) => {
+  if (colorName.includes("::")) {
+    return colorName.split("::")[1];
+  }
   const lower = colorName.toLowerCase();
   return COLOR_MAP[lower] || (colorName.startsWith("#") ? colorName : "#CCCCCC");
 };
@@ -340,7 +348,7 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
             <div className="mb-10">
               <div className="flex justify-between items-center mb-5">
                 <span className="text-sm font-bold text-brand uppercase tracking-widest flex items-center gap-2">
-                  1. Select Color <span className="text-brand/30">—</span> <span className="text-brand-accent">{selectedColor}</span>
+                  1. Select Color <span className="text-brand/30">—</span> <span className="text-brand-accent">{getColorDisplayName(selectedColor)}</span>
                 </span>
               </div>
               <div className="flex flex-wrap gap-4">
@@ -368,7 +376,7 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
                         ? "border-brand-accent scale-110 shadow-lg"
                         : "border-transparent hover:border-brand/20"
                       }`}
-                    title={color}
+                    title={getColorDisplayName(color)}
                   >
                     <div
                       className="w-full h-full rounded-full border border-black/5"

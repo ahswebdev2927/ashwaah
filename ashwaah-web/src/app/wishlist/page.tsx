@@ -48,7 +48,15 @@ const COLOR_MAP: Record<string, string> = {
   yellow: "#EAB308",
 };
 
+const getColorDisplayName = (color: string | null | undefined) => {
+  if (!color) return "";
+  return color.includes("::") ? color.split("::")[0] : color;
+};
+
 const getColorHex = (colorName: string) => {
+  if (colorName.includes("::")) {
+    return colorName.split("::")[1];
+  }
   const lower = colorName.toLowerCase();
   return COLOR_MAP[lower] || (colorName.startsWith("#") ? colorName : "#CCCCCC");
 };
@@ -396,7 +404,7 @@ export default function WishlistPage() {
                       {availableColors.length > 0 && (
                         <div>
                           <span className="block text-xs font-black uppercase tracking-widest text-[#1B3022]/50 mb-3">
-                            Select Color: <span className="text-[#064e3b] font-black">{selectedColor}</span>
+                            Select Color: <span className="text-[#064e3b] font-black">{getColorDisplayName(selectedColor || "")}</span>
                           </span>
                           <div className="flex flex-wrap gap-3">
                             {availableColors.map((color) => (
@@ -425,7 +433,7 @@ export default function WishlistPage() {
                                     ? "border-[#064e3b] scale-110 shadow-sm"
                                     : "border-transparent hover:border-[#1B3022]/20"
                                 }`}
-                                title={color}
+                                title={getColorDisplayName(color)}
                               >
                                 <div
                                   className="w-full h-full rounded-full border border-black/5"

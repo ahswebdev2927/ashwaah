@@ -561,8 +561,10 @@ export default function CategoryFilterSection({
               {availableColors.map((color) => {
                 const count = colorCounts[color] || 0;
                 const isChecked = selectedColors.includes(color);
-                const lowerColor = color.toLowerCase();
-                const hexCode = COLOR_MAP[lowerColor] || (color.startsWith("#") ? color : "#CCCCCC");
+                const displayName = color.includes("::") ? color.split("::")[0] : color;
+                const actualColorValue = color.includes("::") ? color.split("::")[1] : color;
+                const lowerColor = actualColorValue.toLowerCase();
+                const hexCode = COLOR_MAP[lowerColor] || (actualColorValue.startsWith("#") ? actualColorValue : "#CCCCCC");
                 const isWhite = lowerColor === "white" || hexCode === "#FFFFFF";
 
                 return (
@@ -583,7 +585,7 @@ export default function CategoryFilterSection({
                       }`}
                       style={{ backgroundColor: hexCode }}
                     />
-                    <span className="flex-1">{color}</span>
+                    <span className="flex-1">{displayName}</span>
                     <span className="text-brand/35 text-[10px] font-medium">({count})</span>
                   </label>
                 );

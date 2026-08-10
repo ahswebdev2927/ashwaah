@@ -143,6 +143,7 @@ export default function ProductManagement() {
   const [customMeasurements, setCustomMeasurements] = useState<string[]>([]);
   const [newMeasurementInput, setNewMeasurementInput] = useState("");
   const [pendingColor, setPendingColor] = useState("#C5A059");
+  const [pendingColorName, setPendingColorName] = useState("");
 
   // Images per color
   const [colorImageInputs, setColorImageInputs] = useState<Record<string, string>>({});
@@ -780,8 +781,8 @@ export default function ProductManagement() {
                             <span className="text-xs font-bold text-brand">{v.size}</span>
                             {v.color && v.color !== "Default" && (
                               <div className="flex items-center space-x-1.5 bg-brand/5 px-2 py-0.5 rounded-full">
-                                <div className="w-2 h-2 rounded-full border border-white" style={{ backgroundColor: v.color.startsWith("#") ? v.color : PRESET_COLORS.find(c => c.name === v.color)?.hex }} />
-                                <span className="text-[9px] font-bold text-brand/60 uppercase">{v.color}</span>
+                                <div className="w-2 h-2 rounded-full border border-white" style={{ backgroundColor: v.color.includes("::") ? v.color.split("::")[1] : (v.color.startsWith("#") ? v.color : PRESET_COLORS.find(c => c.name === v.color)?.hex) }} />
+                                <span className="text-[9px] font-bold text-brand/60 uppercase">{v.color.includes("::") ? v.color.split("::")[0] : v.color}</span>
                               </div>
                             )}
                           </div>
@@ -1252,6 +1253,34 @@ export default function ProductManagement() {
                   ))}
                 </div>
 
+                {/* Selected Custom Colors */}
+                {selectedColors.filter(c => !PRESET_COLORS.some(p => p.name === c)).length > 0 && (
+                  <div className="space-y-3 mt-4">
+                    <p className="text-[10px] font-black text-brand uppercase tracking-widest">Selected Custom Colors</p>
+                    <div className="flex flex-wrap gap-3">
+                      {selectedColors.filter(c => !PRESET_COLORS.some(p => p.name === c)).map(color => {
+                        const name = color.includes("::") ? color.split("::")[0] : color;
+                        const hex = color.includes("::") ? color.split("::")[1] : color;
+                        return (
+                          <div 
+                            key={color} 
+                            className="flex items-center space-x-2 bg-brand/5 border border-brand/10 rounded-full px-3 py-1.5 hover:bg-red-50 hover:border-red-200 hover:text-red-500 transition-all group cursor-pointer"
+                            onClick={() => toggleColor(color)}
+                            title="Click to remove"
+                          >
+                            <div 
+                              className="w-3.5 h-3.5 rounded-full border border-black/10 shadow-sm" 
+                              style={{ backgroundColor: hex }}
+                            />
+                            <span className="text-[10px] font-black uppercase tracking-wider">{name}</span>
+                            <span className="text-[8px] text-brand/35 group-hover:text-red-400 font-bold">✕</span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+
                 {/* Custom Color Input */}
                 <div className="flex items-center space-x-6 p-6 bg-brand/5 rounded-[2rem] border border-brand/10">
                   <div className="flex-1">
@@ -1270,6 +1299,13 @@ export default function ProductManagement() {
                       <div className="flex-1 space-y-2">
                         <input 
                           type="text" 
+                          value={pendingColorName}
+                          onChange={(e) => setPendingColorName(e.target.value)}
+                          placeholder="Color Name (e.g. Rust Brown)" 
+                          className="w-full bg-white border border-brand/10 rounded-xl px-4 py-2 text-xs font-black text-brand uppercase tracking-widest focus:border-brand-accent outline-none transition-all placeholder:text-brand/20"
+                        />
+                        <input 
+                          type="text" 
                           value={pendingColor}
                           onChange={(e) => setPendingColor(e.target.value.toUpperCase())}
                           placeholder="#C5A059" 
@@ -1278,9 +1314,21 @@ export default function ProductManagement() {
                         <button 
                           type="button"
                           onClick={() => {
-                            if (!selectedColors.includes(pendingColor)) {
-                              if (window.confirm(`Add color ${pendingColor} to this product's variations?`)) {
-                                toggleColor(pendingColor);
+                            const name = pendingColorName.trim();
+                            const hex = pendingColor.trim();
+                            if (!hex.startsWith("#") || hex.length !== 7) {
+                              showToast("Please enter a valid Hex Code (e.g. #563516)");
+                              return;
+                            }
+                            if (!name) {
+                              showToast("Please enter a color name");
+                              return;
+                            }
+                            const colorVal = `${name}::${hex}`;
+                            if (!selectedColors.includes(colorVal)) {
+                              if (window.confirm(`Add color ${name} (${hex}) to variations?`)) {
+                                toggleColor(colorVal);
+                                setPendingColorName("");
                               }
                             } else {
                               showToast("Color already selected");
@@ -1293,10 +1341,10 @@ export default function ProductManagement() {
                       </div>
                     </div>
                   </div>
-                  <div className="hidden md:block w-px h-16 bg-brand/10" />
+                  <div className="hidden md:block w-px h-24 bg-brand/10" />
                   <div className="hidden md:block flex-1">
                     <p className="text-[9px] text-brand/30 font-medium leading-relaxed italic">
-                      Pick a shade and click "Add Color" to confirm. This will generate new size variations in the matrix below.
+                      Pick a color from the swatch or enter a custom hex code, type a color name, and click "Add Color to Matrix" to generate size variations.
                     </p>
                   </div>
                 </div>
@@ -1322,11 +1370,11 @@ export default function ProductManagement() {
                         {color !== "Default" && (
                           <div 
                             className="w-4 h-4 rounded-full border border-black/10"
-                            style={{ backgroundColor: color.startsWith("#") ? color : colorPreset?.hex }}
+                            style={{ backgroundColor: color.includes("::") ? color.split("::")[1] : (color.startsWith("#") ? color : colorPreset?.hex) }}
                           />
                         )}
                         <span className="text-xs font-black text-brand uppercase tracking-wider">
-                          {color === "Default" ? "Default Images" : `${color} Images`} ({currentImages.length})
+                          {color === "Default" ? "Default Images" : `${color.includes("::") ? color.split("::")[0] : color} Images`} ({currentImages.length})
                         </span>
                       </div>
                       
@@ -1435,8 +1483,8 @@ export default function ProductManagement() {
                           <td className="px-5 py-3 font-bold text-brand">{v.size}</td>
                           <td className="px-5 py-3">
                             <div className="flex items-center space-x-2">
-                              {v.color && v.color !== "Default" && <span className="w-3 h-3 rounded-full border border-white shadow" style={{ backgroundColor: v.color.startsWith("#") ? v.color : PRESET_COLORS.find(c => c.name === v.color)?.hex }} />}
-                              <span className="text-brand/60 font-medium">{v.color && v.color !== "Default" ? v.color : "—"}</span>
+                              {v.color && v.color !== "Default" && <span className="w-3 h-3 rounded-full border border-white shadow" style={{ backgroundColor: v.color.includes("::") ? v.color.split("::")[1] : (v.color.startsWith("#") ? v.color : PRESET_COLORS.find(c => c.name === v.color)?.hex) }} />}
+                              <span className="text-brand/60 font-medium">{v.color && v.color !== "Default" ? (v.color.includes("::") ? v.color.split("::")[0] : v.color) : "—"}</span>
                             </div>
                           </td>
                           <td className="px-5 py-3">

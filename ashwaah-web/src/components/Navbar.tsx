@@ -21,7 +21,7 @@ type NavItem = {
 export default function Navbar() {
   const pathname = usePathname();
   const router = useRouter();
-  
+
 
   const [navItems, setNavItems] = useState<NavItem[]>([]);
 
@@ -32,7 +32,7 @@ export default function Navbar() {
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
-  
+
   // Cart store hydration handling
   const [cartCount, setCartCount] = useState(0);
   const getTotalItems = useCartStore((state) => state.getTotalItems);
@@ -48,7 +48,7 @@ export default function Navbar() {
 
   useEffect(() => {
     setCartCount(getTotalItems());
-    
+
     // Sync cart with backend if user is logged in
     const syncCart = async () => {
       if (user && cartItems.length > 0) {
@@ -141,14 +141,14 @@ export default function Navbar() {
       <header className="sticky top-0 z-50 w-full bg-[#064e3b] border-b border-white/10 shadow-lg font-inter">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-12">
-            
+
             {/* Logo */}
             <div className="flex-shrink-0 flex items-center mr-2 sm:mr-4 md:mr-8">
               <Link href="/" className="flex items-center gap-1 sm:gap-1.5 group">
-                <img 
-                  src="/images/logo.png" 
-                  alt="Ashwaah Logo" 
-                  className="h-[28px] sm:h-[34px] w-auto object-contain transition-transform duration-300 group-hover:scale-105" 
+                <img
+                  src="/images/logo.png"
+                  alt="Ashwaah Logo"
+                  className="h-[28px] sm:h-[34px] w-auto object-contain transition-transform duration-300 group-hover:scale-105"
                 />
                 <span className="font-gabriola text-xl sm:text-2xl md:text-3xl font-bold text-white tracking-wide hover:text-[#C5A059] transition-colors translate-y-[3px]">
                   Ashwaah
@@ -167,7 +167,7 @@ export default function Navbar() {
                   <div className="absolute left-3 flex items-center pointer-events-none text-brand-dark/40">
                     <Search size={16} strokeWidth={2.2} />
                   </div>
-                  <input 
+                  <input
                     type="text"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
@@ -206,14 +206,14 @@ export default function Navbar() {
                   {cartCount}
                 </span>
               </Link>
-              
+
               {user ? (
-                <ProfileDropdown 
-                  user={user} 
-                  onLogout={() => setIsLogoutModalOpen(true)} 
+                <ProfileDropdown
+                  user={user}
+                  onLogout={() => setIsLogoutModalOpen(true)}
                 />
               ) : (
-                <button 
+                <button
                   onClick={() => window.location.href = "/login"}
                   className="flex items-center space-x-2 text-xs font-bold tracking-[0.2em] uppercase bg-[#C5A059] text-white px-6 py-1.5 rounded-full hover:bg-[#B38E46] transition-all shadow-md cursor-pointer relative z-10"
                 >
@@ -265,7 +265,7 @@ export default function Navbar() {
         {isMobileMenuOpen && (
           <div className="md:hidden bg-[#064e3b] border-t border-white/10 animate-in slide-in-from-top duration-300">
             <div className="px-6 pt-8 pb-12 space-y-6">
-              
+
               {/* About Us Section */}
               <div className="space-y-3">
                 <h3 className="text-[11px] font-black uppercase tracking-[0.2em] text-[#C5A059] opacity-80">About Us</h3>
@@ -276,7 +276,7 @@ export default function Navbar() {
                     className="flex items-center space-x-3 text-white hover:text-[#C5A059] transition-colors py-2.5"
                   >
                     <BookOpen className="h-4.5 w-4.5 text-[#C5A059]" />
-                    <span className="text-sm font-bold uppercase tracking-wider">Our Story</span>
+                    <span className="text-sm font-bold uppercase tracking-wider">Ashwaah Story</span>
                   </Link>
                   <Link
                     href="/events"
@@ -294,7 +294,7 @@ export default function Navbar() {
               {/* Account Section */}
               <div className="space-y-3">
                 <h3 className="text-[11px] font-black uppercase tracking-[0.2em] text-[#C5A059] opacity-80">Account</h3>
-                
+
                 {user ? (
                   <div className="space-y-2">
                     {/* User Info Header in Sidebar */}
@@ -378,7 +378,7 @@ export default function Navbar() {
               <p className="text-brand/60 text-sm mb-8 leading-relaxed">
                 Are you sure you want to log out from Ashwaah? You'll need to verify your phone number to sign in again.
               </p>
-              
+
               <div className="w-full space-y-3">
                 <button
                   onClick={confirmLogout}

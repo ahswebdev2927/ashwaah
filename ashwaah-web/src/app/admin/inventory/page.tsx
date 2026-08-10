@@ -348,7 +348,7 @@ export default function InventoryPage() {
                                                     backgroundColor: getHexColor(c.color) 
                                                   }} 
                                                 />
-                                                <span className="text-brand/70 font-semibold">{c.color}</span>
+                                                <span className="text-brand/70 font-semibold">{c.color.includes("::") ? c.color.split("::")[0] : c.color}</span>
                                               </div>
                                               
                                               {/* Stats breakdown */}
@@ -421,6 +421,9 @@ export default function InventoryPage() {
 }
 
 const getHexColor = (colorName: string) => {
+  if (colorName.includes("::")) {
+    return colorName.split("::")[1];
+  }
   const name = colorName.toLowerCase().trim();
   const colorMap: Record<string, string> = {
     black: "#000000",
