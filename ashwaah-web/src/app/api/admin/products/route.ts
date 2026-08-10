@@ -2,7 +2,7 @@ import { verifyAdminRequest } from "@/utils/auth";
 import { NextResponse } from "next/server";
 import { db } from "@/db";
 import { products, productVariations, orderItems, cartItems, orders } from "@/db/schema";
-import { eq, like, or, sql, desc } from "drizzle-orm";
+import { eq, like, or, sql, desc, and, ne } from "drizzle-orm";
 
 async function isAdmin(request?: Request) {
   return !!(await verifyAdminRequest(request));
@@ -99,6 +99,16 @@ export async function POST(request: Request) {
     // Validation
     if (!name) return NextResponse.json({ success: false, error: "Product name is required" }, { status: 400 });
     
+    // Check uniqueness
+    const existing = await db
+      .select()
+      .from(products)
+      .where(sql`lower(${products.name}) = lower(${name.trim()})`)
+      .limit(1);
+    if (existing.length > 0) {
+      return NextResponse.json({ success: false, error: "A product with this name already exists" }, { status: 400 });
+    }
+    
     // Pricing is now handled per variation. 
     // We will calculate a "base price" for the main product entry from the minimum variation price.
     const basePriceValue = variations && variations.length > 0 ? Math.min(...variations.map((v: any) => Number(v.basePrice) || 0)) : 0;
@@ -179,6 +189,23 @@ export async function PATCH(request: Request) {
     } = body;
 
     if (!id) return NextResponse.json({ success: false, error: "ID is required" }, { status: 400 });
+
+    // Check uniqueness if name is updated
+    if (name) {
+      const existing = await db
+        .select()
+        .from(products)
+        .where(
+          and(
+            sql`lower(${products.name}) = lower(${name.trim()})`,
+            ne(products.id, id)
+          )
+        )
+        .limit(1);
+      if (existing.length > 0) {
+        return NextResponse.json({ success: false, error: "A product with this name already exists" }, { status: 400 });
+      }
+    }
 
     // Pricing from variations
     let basePriceValue: number | undefined;

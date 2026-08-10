@@ -144,6 +144,8 @@ export default function ProductManagement() {
   const [newMeasurementInput, setNewMeasurementInput] = useState("");
   const [pendingColor, setPendingColor] = useState("#C5A059");
   const [pendingColorName, setPendingColorName] = useState("");
+  const [isNameChecking, setIsNameChecking] = useState(false);
+  const [nameError, setNameError] = useState("");
 
   // Images per color
   const [colorImageInputs, setColorImageInputs] = useState<Record<string, string>>({});
@@ -327,6 +329,35 @@ export default function ProductManagement() {
     );
   }, [products, searchTerm]);
 
+  // Debounced real-time name check for uniqueness
+  useEffect(() => {
+    const trimmedName = name.trim();
+    if (!trimmedName) {
+      setNameError("");
+      return;
+    }
+
+    setIsNameChecking(true);
+    const delayDebounce = setTimeout(async () => {
+      try {
+        const excludeParam = editingId ? `&excludeId=${editingId}` : "";
+        const res = await fetch(`/api/admin/products/check-name?name=${encodeURIComponent(trimmedName)}${excludeParam}`);
+        const data = await res.json();
+        if (data.success && data.exists) {
+          setNameError("⚠️ Product name already in use");
+        } else {
+          setNameError("");
+        }
+      } catch (err) {
+        console.error("Failed to check name uniqueness:", err);
+      } finally {
+        setIsNameChecking(false);
+      }
+    }, 600); // 600ms debounce
+
+    return () => clearTimeout(delayDebounce);
+  }, [name, editingId]);
+
   // When sizes or colors change → regenerate variation matrix
   useEffect(() => {
     if (selectedSizes.length === 0 && selectedColors.length === 0) { 
@@ -439,6 +470,8 @@ export default function ProductManagement() {
   const resetForm = () => {
     setEditingId(null);
     setName(""); setDescription(""); setGender("unisex"); setCategory("");
+    setNameError("");
+    setIsNameChecking(false);
     setAvgRating("4.3"); setNumReviews("1");
     setIsFeatured(false); setIsCustomizable(false); setTags("");
     setStyle(""); setFabricComposition(""); setWeave(""); setNeckStyle(""); setKeyWords(""); setFilterCategory("");
@@ -600,6 +633,7 @@ export default function ProductManagement() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!name.trim()) return showToast("Product name is required.");
+    if (nameError) return showToast(nameError);
     
     // Check images count across active colors
     const activeColors = selectedColors.length > 0 ? selectedColors : ["Default"];
@@ -861,7 +895,13 @@ export default function ProductManagement() {
               <div className="space-y-5">
                 <div>
                   <label className={LABEL}>Product Name *</label>
-                  <input value={name} onChange={e => setName(e.target.value)} placeholder="e.g. Kerala Cotton Kasavu Nighty" className={INPUT} required />
+                  <input value={name} onChange={e => setName(e.target.value)} placeholder="e.g. Kerala Cotton Kasavu Nighty" className={`${INPUT} ${nameError ? 'border-red-500 focus:border-red-500' : ''}`} required />
+                  {isNameChecking && (
+                    <span className="text-[10px] text-brand/40 mt-1 block">Checking name availability...</span>
+                  )}
+                  {nameError && (
+                    <span className="text-[10px] font-bold text-red-500 mt-1 block">{nameError}</span>
+                  )}
                 </div>
                 <div className="grid grid-cols-2 gap-5">
                   <div>
@@ -1543,7 +1583,7 @@ export default function ProductManagement() {
             </div>
 
             {/* Submit */}
-            <button disabled={isSubmitting}
+            <button disabled={isSubmitting || !!nameError}
               className="w-full bg-brand text-brand-accent py-6 rounded-[2rem] font-black uppercase tracking-[0.4em] text-xs hover:bg-brand-hover hover:shadow-[0_20px_40px_rgba(27,48,34,0.2)] transition-all active:scale-[0.98] disabled:opacity-50 flex items-center justify-center space-x-4 shadow-2xl relative overflow-hidden group">
               <div className="absolute inset-0 bg-white/5 translate-y-full group-hover:translate-y-0 transition-transform duration-500" />
               <div className="relative flex items-center space-x-3">
