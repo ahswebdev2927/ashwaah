@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { Search, ShoppingCart, User, Menu, X, LogOut, AlertCircle, BookOpen, Heart, Trash2, Calendar } from "lucide-react";
+import { Search, ShoppingCart, User, Menu, X, LogOut, AlertCircle, BookOpen, Heart, Trash2, Calendar, Package, MapPin } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import ProfileDropdown from "./ProfileDropdown";
 import SearchModal from "./SearchModal";
@@ -228,9 +228,6 @@ export default function Navbar() {
               <button onClick={() => setIsSearchOpen(true)} aria-label="Search" className="text-white p-1 sm:p-2">
                 <Search className="h-5 w-5" />
               </button>
-              <Link href="/my-story" aria-label="My Story" className="text-white p-1 sm:p-2">
-                <BookOpen className="h-5 w-5" />
-              </Link>
               <Link
                 href={user ? "/wishlist" : `/login?redirect=${encodeURIComponent(pathname)}`}
                 aria-label="Wishlist"
@@ -267,66 +264,103 @@ export default function Navbar() {
         {/* Mobile Menu Panel */}
         {isMobileMenuOpen && (
           <div className="md:hidden bg-[#064e3b] border-t border-white/10 animate-in slide-in-from-top duration-300">
-            <div className="px-6 pt-8 pb-12 space-y-4">
-              {/* Dynamic categories moved to home page */}
-              <div className="flex flex-col space-y-3 pb-6 border-b border-white/10">
-                <Link
-                  href="/my-story"
-                  onClick={() => setIsMobileMenuOpen(false)}
-                  className="flex items-center space-x-3 text-white hover:text-[#C5A059] transition-colors py-2"
-                >
-                  <BookOpen className="h-5 w-5 text-[#C5A059]" />
-                  <span className="text-sm font-bold uppercase tracking-wider">My Story</span>
-                </Link>
-                <Link
-                  href="/events"
-                  onClick={() => setIsMobileMenuOpen(false)}
-                  className="flex items-center space-x-3 text-white hover:text-[#C5A059] transition-colors py-2"
-                >
-                  <Calendar className="h-5 w-5 text-[#C5A059]" />
-                  <span className="text-sm font-bold uppercase tracking-wider">Events</span>
-                </Link>
-              </div>
+            <div className="px-6 pt-8 pb-12 space-y-6">
               
-              <div className="pt-4">
+              {/* About Us Section */}
+              <div className="space-y-3">
+                <h3 className="text-[11px] font-black uppercase tracking-[0.2em] text-[#C5A059] opacity-80">About Us</h3>
+                <div className="flex flex-col space-y-1 pl-1">
+                  <Link
+                    href="/my-story"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className="flex items-center space-x-3 text-white hover:text-[#C5A059] transition-colors py-2.5"
+                  >
+                    <BookOpen className="h-4.5 w-4.5 text-[#C5A059]" />
+                    <span className="text-sm font-bold uppercase tracking-wider">Our Story</span>
+                  </Link>
+                  <Link
+                    href="/events"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className="flex items-center space-x-3 text-white hover:text-[#C5A059] transition-colors py-2.5"
+                  >
+                    <Calendar className="h-4.5 w-4.5 text-[#C5A059]" />
+                    <span className="text-sm font-bold uppercase tracking-wider">Events</span>
+                  </Link>
+                </div>
+              </div>
+
+              <div className="border-t border-white/10" />
+
+              {/* Account Section */}
+              <div className="space-y-3">
+                <h3 className="text-[11px] font-black uppercase tracking-[0.2em] text-[#C5A059] opacity-80">Account</h3>
+                
                 {user ? (
-                  <div className="space-y-4">
-                    <Link
-                      href="/profile"
-                      className="flex items-center space-x-4 px-4 py-4 rounded-xl bg-white/5"
-                      onClick={() => setIsMobileMenuOpen(false)}
-                    >
-                      <div className="w-10 h-10 rounded-full bg-[#FFFDF6] flex items-center justify-center text-[#064e3b] font-bold">
-                        {user.fullName?.charAt(0) || "U"}
+                  <div className="space-y-2">
+                    {/* User Info Header in Sidebar */}
+                    <div className="flex items-center space-x-3 px-4 py-3 rounded-2xl bg-white/5 border border-white/5 mb-3">
+                      <div className="w-8 h-8 rounded-full bg-[#FFFDF6] flex items-center justify-center text-[#064e3b] text-xs font-black shadow-sm">
+                        {user.fullName ? user.fullName.split(" ").map(n => n[0]).join("").toUpperCase().substring(0, 1) : "U"}
                       </div>
-                      <div>
-                        <div className="text-sm font-bold uppercase tracking-widest text-white">{user.fullName || "My Profile"}</div>
-                        <div className="text-[10px] text-white/40 uppercase tracking-widest">View Details</div>
+                      <div className="min-w-0 flex-1">
+                        <div className="text-xs font-black uppercase tracking-widest text-white truncate">{user.fullName || "User"}</div>
+                        <div className="text-[9px] text-white/45 uppercase tracking-widest font-bold mt-0.5">{user.phoneNumber}</div>
                       </div>
-                    </Link>
+                    </div>
+
+                    <div className="flex flex-col space-y-1 pl-1">
+                      <Link
+                        href="/account/profile"
+                        onClick={() => setIsMobileMenuOpen(false)}
+                        className="flex items-center space-x-3 text-white hover:text-[#C5A059] transition-colors py-2.5"
+                      >
+                        <User className="h-4.5 w-4.5 text-[#C5A059]" />
+                        <span className="text-sm font-bold uppercase tracking-wider">Edit Profile</span>
+                      </Link>
+                      <Link
+                        href="/profile/orders"
+                        onClick={() => setIsMobileMenuOpen(false)}
+                        className="flex items-center space-x-3 text-white hover:text-[#C5A059] transition-colors py-2.5"
+                      >
+                        <Package className="h-4.5 w-4.5 text-[#C5A059]" />
+                        <span className="text-sm font-bold uppercase tracking-wider">My Orders</span>
+                      </Link>
+                      <Link
+                        href="/account/address"
+                        onClick={() => setIsMobileMenuOpen(false)}
+                        className="flex items-center space-x-3 text-white hover:text-[#C5A059] transition-colors py-2.5"
+                      >
+                        <MapPin className="h-4.5 w-4.5 text-[#C5A059]" />
+                        <span className="text-sm font-bold uppercase tracking-wider">My Addresses</span>
+                      </Link>
+                    </div>
+
                     <button
                       onClick={() => {
                         setIsMobileMenuOpen(false);
                         setIsLogoutModalOpen(true);
                       }}
-                      className="w-full flex items-center justify-center space-x-3 px-4 py-4 rounded-xl border-2 border-red-500/20 text-red-400 font-bold uppercase tracking-widest text-xs"
+                      className="w-full mt-4 flex items-center justify-center space-x-2 px-4 py-3 rounded-xl border border-red-500/20 text-red-400 hover:text-red-300 hover:bg-red-500/5 transition-all font-bold uppercase tracking-widest text-[10px] cursor-pointer"
                     >
-                      <LogOut size={16} />
+                      <LogOut size={14} />
                       <span>Logout</span>
                     </button>
                   </div>
                 ) : (
-                  <button
-                    onClick={() => {
-                      setIsMobileMenuOpen(false);
-                      window.location.href = "/login";
-                    }}
-                    className="block w-full px-4 py-5 rounded-xl text-center text-sm font-bold uppercase tracking-[0.2em] text-white bg-[#C5A059] hover:bg-[#B38E46] shadow-lg relative z-10"
-                  >
-                    Login / Sign Up
-                  </button>
+                  <div className="pt-2">
+                    <button
+                      onClick={() => {
+                        setIsMobileMenuOpen(false);
+                        window.location.href = "/login";
+                      }}
+                      className="block w-full px-4 py-4 rounded-xl text-center text-xs font-black uppercase tracking-[0.2em] text-white bg-[#C5A059] hover:bg-[#B38E46] shadow-lg relative z-10 transition-all cursor-pointer"
+                    >
+                      Login / Sign Up
+                    </button>
+                  </div>
                 )}
               </div>
+
             </div>
           </div>
         )}
