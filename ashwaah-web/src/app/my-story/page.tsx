@@ -80,17 +80,17 @@ export default function MyStory() {
                 </div>
                 <div>
                   <p className="text-[10px] font-black uppercase tracking-widest text-[#1B3022]/40">Call Us</p>
-                  <p className="text-lg font-bold text-[#1B3022]">+91 96115 26047</p>
+                  <p className="text-lg font-bold text-[#1B3022]">+91 63649 36047</p>
                 </div>
               </div>
 
-              <a href="https://wa.me/919611526047" target="_blank" rel="noopener noreferrer" className="flex items-center gap-6 group">
+              <a href="https://wa.me/916364936047" target="_blank" rel="noopener noreferrer" className="flex items-center gap-6 group">
                 <div className="w-12 h-12 rounded-2xl bg-[#1B3022]/5 flex items-center justify-center group-hover:bg-[#25D366] transition-all duration-500">
                   <MessageCircle size={20} className="text-[#C5A059] group-hover:text-white" />
                 </div>
                 <div>
                   <p className="text-[10px] font-black uppercase tracking-widest text-[#1B3022]/40">WhatsApp Us</p>
-                  <p className="text-lg font-bold text-[#1B3022]">+91 96115 26047</p>
+                  <p className="text-lg font-bold text-[#1B3022]">+91 63649 36047</p>
                 </div>
               </a>
             </div>

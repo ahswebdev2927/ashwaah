@@ -250,10 +250,10 @@ export default function MyOrdersPage() {
                   </div>
                 </div>
 
-                {/* Delivery Milestones Tracker */}
                 {order.status?.toLowerCase() !== "cancelled" && order.status?.toLowerCase() !== "payment_pending" && (
-                  <div className="px-10 md:px-24 lg:px-32 pb-8 pt-4">
-                    <div className="relative">
+                  <div className="px-6 md:px-24 lg:px-32 pb-8 pt-4">
+                    {/* Horizontal Stepper for Desktop */}
+                    <div className="hidden md:block relative">
                       {/* Background Line */}
                       <div className="absolute top-1/2 left-0 w-full h-[1px] bg-brand/10 -translate-y-1/2 rounded-full" />
                       
@@ -309,6 +309,43 @@ export default function MyOrdersPage() {
                           );
                         })}
                       </div>
+                    </div>
+
+                    {/* Vertical Stepper for Mobile */}
+                    <div className="md:hidden space-y-0 pl-2">
+                      {MILESTONES.map((m, idx) => {
+                        const isCompleted = MILESTONES.indexOf(order.status) >= idx;
+                        const isCurrent = order.status === m;
+                        const isLast = idx === MILESTONES.length - 1;
+                        const isLineActive = MILESTONES.indexOf(order.status) > idx;
+
+                        return (
+                          <div key={m} className="flex items-start space-x-4 relative pb-6 last:pb-0">
+                            {/* Vertical Line Connector */}
+                            {!isLast && (
+                              <div className={`absolute left-[7px] top-4 bottom-0 w-[1.5px] transition-colors duration-500 ${
+                                isLineActive ? "bg-[#C5A059]" : "bg-brand/10"
+                              }`} />
+                            )}
+                            
+                            {/* Milestone Circle */}
+                            <div className={`w-3.5 h-3.5 rounded-full border-2 flex items-center justify-center bg-white z-10 transition-all duration-500 ${
+                              isCompleted 
+                                ? "border-[#C5A059] bg-[#C5A059]" 
+                                : "border-brand/20"
+                            } ${isCurrent ? "ring-4 ring-[#C5A059]/20 animate-pulse" : ""}`}>
+                              <div className={`w-1 h-1 rounded-full ${isCompleted ? "bg-white" : "bg-transparent"}`} />
+                            </div>
+
+                            {/* Label */}
+                            <span className={`text-[10px] font-black uppercase tracking-[0.15em] transition-colors duration-500 -mt-[1px] ${
+                              isCurrent ? "text-[#C5A059]" : isCompleted ? "text-brand" : "text-brand/25"
+                            }`}>
+                              {m}
+                            </span>
+                          </div>
+                        );
+                      })}
                     </div>
                   </div>
                 )}

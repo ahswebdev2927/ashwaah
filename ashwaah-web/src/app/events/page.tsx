@@ -502,7 +502,7 @@ export default function EventsPage() {
       if (data.success) {
         showToast("✓ Registered! Opening WhatsApp...");
         
-        // Formulate WhatsApp message to send to 9611526047
+        // Formulate WhatsApp message to send to 6364936047
         const formattedMsg = `Hello Ashwaah! I have registered for the event:
 *Event:* ${selectedEvent.title}
 *Date:* ${selectedEvent.date}
@@ -517,7 +517,7 @@ export default function EventsPage() {
 ${regNotes ? `*Notes:* ${regNotes}` : ""}`;
 
         const encodedMsg = encodeURIComponent(formattedMsg);
-        const whatsappUrl = `https://api.whatsapp.com/send?phone=919611526047&text=${encodedMsg}`;
+        const whatsappUrl = `https://api.whatsapp.com/send?phone=916364936047&text=${encodedMsg}`;
         window.open(whatsappUrl, "_blank");
 
         setSelectedEvent(null);
@@ -754,7 +754,7 @@ ${regNotes ? `*Notes:* ${regNotes}` : ""}`;
                     value={regPhone}
                     onChange={(e) => setRegPhone(e.target.value)}
                     className="w-full px-4 py-3 bg-white border border-brand/10 rounded-2xl text-sm focus:outline-none focus:border-brand text-brand font-medium"
-                    placeholder="9611526047"
+                    placeholder="6364936047"
                   />
                 </div>
                 <div>

@@ -124,13 +124,14 @@ export default function CategorySettingsPage() {
     setError("");
     setSuccess("");
 
+    const defaultLink = `/category/${name.toLowerCase().trim().replace(/\s+/g, "-")}`;
     const payload = {
       id: editingId,
       name: name.trim(),
       imageUrl: imageUrl.trim(),
       promoText: promoText.trim(),
       actionText: actionText.trim() || "Shop Now",
-      link: link.trim() || null,
+      link: defaultLink,
       order: Number(order) || 0,
       filterTypes: filterTypes.trim() || null,
     };
@@ -291,14 +292,15 @@ export default function CategorySettingsPage() {
 
             <div>
               <label className="block text-[10px] font-black text-brand/40 uppercase tracking-[0.2em] mb-2 ml-1">
-                Category Image URL
+                Category Image URL (Upload Below)
               </label>
               <input
                 type="text"
                 value={imageUrl}
-                onChange={(e) => setImageUrl(e.target.value)}
-                placeholder="e.g. https://images.unsplash.com/... or /images/..."
-                className="w-full bg-brand/5 border border-transparent focus:border-[#C5A059]/50 rounded-2xl px-5 py-3.5 text-sm font-semibold text-brand outline-none transition-all placeholder:text-brand/20"
+                readOnly
+                disabled
+                placeholder="Upload local image below to generate Cloudinary URL..."
+                className="w-full bg-brand/10 border border-transparent rounded-2xl px-5 py-3.5 text-sm font-semibold text-brand/50 outline-none cursor-not-allowed"
                 required
               />
               <div className="relative border-2 border-dashed border-brand/10 hover:border-[#C5A059]/40 bg-brand-light/50 hover:bg-white rounded-2xl h-24 transition-all flex flex-col items-center justify-center cursor-pointer mt-3">
@@ -364,19 +366,6 @@ export default function CategorySettingsPage() {
                   className="w-full bg-brand/5 border border-transparent focus:border-[#C5A059]/50 rounded-2xl px-5 py-3.5 text-sm font-semibold text-brand outline-none transition-all placeholder:text-brand/20"
                 />
               </div>
-            </div>
-
-            <div>
-              <label className="block text-[10px] font-black text-brand/40 uppercase tracking-[0.2em] mb-2 ml-1">
-                Link URL
-              </label>
-              <input
-                type="text"
-                value={link}
-                onChange={(e) => setLink(e.target.value)}
-                placeholder="e.g. /category/ethnic-wear"
-                className="w-full bg-brand/5 border border-transparent focus:border-[#C5A059]/50 rounded-2xl px-5 py-3.5 text-sm font-semibold text-brand outline-none transition-all placeholder:text-brand/20"
-              />
             </div>
 
             <div>
