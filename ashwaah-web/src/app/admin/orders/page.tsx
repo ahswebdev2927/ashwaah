@@ -39,11 +39,24 @@ interface Order {
   shippingNotes?: string | null;
 }
 
-function getProductImage(imagesStr: string | null) {
+function getProductImage(imagesStr: string | null, color?: string | null) {
   try {
     if (imagesStr) {
       const parsed = JSON.parse(imagesStr);
-      if (Array.isArray(parsed) && parsed.length > 0) return parsed[0];
+      if (Array.isArray(parsed)) {
+        if (parsed.length > 0) return parsed[0];
+      } else if (parsed && typeof parsed === "object") {
+        if (color && parsed[color] && parsed[color].length > 0) {
+          return parsed[color][0];
+        }
+        // Fallback to first available color/key
+        const keys = Object.keys(parsed);
+        for (const key of keys) {
+          if (parsed[key] && parsed[key].length > 0) {
+            return parsed[key][0];
+          }
+        }
+      }
     }
   } catch (e) {}
   return "/images/placeholder.png";
@@ -452,7 +465,7 @@ export default function AdminOrders() {
                       </h4>
                       <div className="space-y-4">
                         {order.items.map((item) => {
-                          const imgUrl = getProductImage(item.productImages);
+                          const imgUrl = getProductImage(item.productImages, item.color);
                           return (
                             <div key={item.id} className="bg-white p-6 rounded-3xl border border-brand/5 shadow-sm">
                               <div className="flex gap-4 items-start mb-6">
