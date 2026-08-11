@@ -2,7 +2,7 @@ import { verifyAdminRequest } from "@/utils/auth";
 import { NextResponse } from "next/server";
 import { db } from "@/db";
 import { users, orders, orderItems, products, cartItems, wishlists } from "@/db/schema";
-import { eq, desc } from "drizzle-orm";
+import { eq, desc, and } from "drizzle-orm";
 
 async function isAdmin(request?: Request) {
   return !!(await verifyAdminRequest(request));
@@ -79,6 +79,23 @@ export async function GET(request: Request, { params }: Params) {
         }))
       };
     }));
+
+    // Clean up legacy cart items that have already been successfully ordered
+    const orderedItems = ordersWithItems
+      .filter(o => o.status !== "cancelled" && o.status !== "payment_pending")
+      .flatMap(o => o.items);
+
+    for (const item of orderedItems) {
+      if (item.productId) {
+        await db.delete(cartItems).where(
+          and(
+            eq(cartItems.userId, customerId),
+            eq(cartItems.productId, item.productId),
+            eq(cartItems.baseSize, item.size)
+          )
+        );
+      }
+    }
 
     // 3. Fetch customer's cart list
     const userCartItems = await db.select({

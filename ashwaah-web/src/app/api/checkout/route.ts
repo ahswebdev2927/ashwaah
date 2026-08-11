@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { db } from "@/db";
-import { orders, orderItems, users } from "@/db/schema";
+import { orders, orderItems, users, cartItems } from "@/db/schema";
 import { getVerifiedPhoneFromCookie } from "@/db/auth-helper";
 import { eq } from "drizzle-orm";
 import { validateAndCalculateCoupon } from "@/utils/coupon";
@@ -84,6 +84,9 @@ export async function POST(req: Request) {
         customizations: JSON.stringify(item.customizations),
       });
     }
+
+    // Clear cart items for this user
+    await db.delete(cartItems).where(eq(cartItems.userId, user.id));
 
     return NextResponse.json({ success: true, orderId: newOrder.id });
   } catch (error: any) {

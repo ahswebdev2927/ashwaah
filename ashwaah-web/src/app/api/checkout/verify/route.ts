@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import crypto from "crypto";
 import { db } from "@/db";
-import { orders } from "@/db/schema";
+import { orders, cartItems } from "@/db/schema";
 import { eq } from "drizzle-orm";
 
 export async function POST(req: Request) {
@@ -54,6 +54,11 @@ export async function POST(req: Request) {
         razorpaySignature: razorpaySignature,
       })
       .where(eq(orders.id, order.id));
+
+    // Clear cart items for the user who placed this order
+    if (order.userId) {
+      await db.delete(cartItems).where(eq(cartItems.userId, order.userId));
+    }
 
     return NextResponse.json({ success: true, orderId: order.id });
   } catch (error: any) {
