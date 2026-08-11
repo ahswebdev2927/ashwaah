@@ -161,15 +161,42 @@ export default function CustomerManagement() {
 
   function renderCustomizations(customs: any) {
     if (!customs || typeof customs !== "object" || Object.keys(customs).length === 0) return null;
+    
+    // Check if there are actual non-empty attributes to render
+    const hasRenderableContent = Object.entries(customs).some(([_, val]) => {
+      if (val && typeof val === "object") {
+        return Object.keys(val).length > 0;
+      }
+      return val !== null && val !== undefined && val !== "";
+    });
+
+    if (!hasRenderableContent) return null;
+
     return (
       <div className="mt-2 p-3 bg-brand/5 rounded-xl border border-brand/5 text-[11px] font-semibold text-brand/70 space-y-1">
         <p className="text-[10px] font-black uppercase tracking-widest text-[#C5A059] mb-1">Bespoke Measurements</p>
-        {Object.entries(customs).map(([key, val]: [string, any]) => (
-          <div key={key} className="flex justify-between">
-            <span className="capitalize">{key.replace(/([A-Z])/g, " $1")}:</span>
-            <span className="font-bold text-brand">{val}</span>
-          </div>
-        ))}
+        {Object.entries(customs).map(([key, val]: [string, any]) => {
+          if (val && typeof val === "object") {
+            if (Object.keys(val).length === 0) return null;
+            return (
+              <div key={key} className="mt-1 pl-2 border-l border-[#C5A059]/20 space-y-1">
+                <span className="capitalize text-[10px] font-black tracking-wider text-[#C5A059] block mb-0.5">{key}:</span>
+                {Object.entries(val).map(([subKey, subVal]: [string, any]) => (
+                  <div key={subKey} className="flex justify-between pl-2 text-[10px]">
+                    <span className="capitalize">{subKey.replace(/([A-Z])/g, " $1")}:</span>
+                    <span className="font-bold text-brand">{typeof subVal === "object" ? JSON.stringify(subVal) : String(subVal)}</span>
+                  </div>
+                ))}
+              </div>
+            );
+          }
+          return (
+            <div key={key} className="flex justify-between">
+              <span className="capitalize">{key.replace(/([A-Z])/g, " $1")}:</span>
+              <span className="font-bold text-brand">{String(val)}</span>
+            </div>
+          );
+        })}
       </div>
     );
   }
