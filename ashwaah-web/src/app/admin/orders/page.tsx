@@ -85,6 +85,11 @@ export default function AdminOrders() {
   const [isSubmittingShipping, setIsSubmittingShipping] = useState(false);
   const [toast, setToast] = useState("");
 
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [selectedOrderForPayment, setSelectedOrderForPayment] = useState<Order | null>(null);
+  const [paymentForm, setPaymentForm] = useState({ razorpayPaymentId: "" });
+  const [isSubmittingPayment, setIsSubmittingPayment] = useState(false);
+
   const showToast = (msg: string) => {
     setToast(msg);
     setTimeout(() => setToast(""), 3000);
@@ -139,8 +144,10 @@ export default function AdminOrders() {
   const statusCounts = {
     pending: orders.filter(o => o.status?.toLowerCase() === "pending").length,
     confirmed: orders.filter(o => o.status?.toLowerCase() === "confirmed").length,
-    processing: orders.filter(o => ["processing", "ready to ship", "shipped"].includes(o.status?.toLowerCase() || "")).length,
-    completed: orders.filter(o => o.status?.toLowerCase() === "delivered").length,
+    processing: orders.filter(o => o.status?.toLowerCase() === "processing").length,
+    readyToShip: orders.filter(o => o.status?.toLowerCase() === "ready to ship").length,
+    shipped: orders.filter(o => o.status?.toLowerCase() === "shipped").length,
+    delivered: orders.filter(o => o.status?.toLowerCase() === "delivered").length,
     cancelled: orders.filter(o => o.status?.toLowerCase() === "cancelled").length,
   };
 
@@ -157,11 +164,7 @@ export default function AdminOrders() {
     // Status filter
     if (statusFilter && statusFilter !== "all") {
       const orderStatus = (order.status || "").toLowerCase();
-      if (statusFilter === "pending" && orderStatus !== "pending") return false;
-      if (statusFilter === "confirmed" && orderStatus !== "confirmed") return false;
-      if (statusFilter === "processing" && !["processing", "ready to ship", "shipped"].includes(orderStatus)) return false;
-      if (statusFilter === "completed" && orderStatus !== "delivered") return false;
-      if (statusFilter === "cancelled" && orderStatus !== "cancelled") return false;
+      if (orderStatus !== statusFilter) return false;
     }
 
     // Date filters
@@ -222,21 +225,23 @@ export default function AdminOrders() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-5 gap-6 mb-10">
+      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-4 mb-10">
         {[
           { label: "Pending", count: statusCounts.pending, icon: Clock, color: "text-amber-500", bg: "bg-amber-50" },
           { label: "Confirmed", count: statusCounts.confirmed, icon: CheckCircle2, color: "text-blue-500", bg: "bg-blue-50" },
-          { label: "Processing", count: statusCounts.processing, icon: Truck, color: "text-indigo-500", bg: "bg-indigo-50" },
-          { label: "Completed", count: statusCounts.completed, icon: ShoppingBag, color: "text-green-500", bg: "bg-green-50" },
-          { label: "Cancelled", count: statusCounts.cancelled, icon: ShoppingBag, color: "text-red-500", bg: "bg-red-50" },
+          { label: "Processing", count: statusCounts.processing, icon: Scissors, color: "text-indigo-500", bg: "bg-indigo-50" },
+          { label: "Ready to Ship", count: statusCounts.readyToShip, icon: Sparkles, color: "text-pink-500", bg: "bg-pink-50" },
+          { label: "Shipped", count: statusCounts.shipped, icon: Truck, color: "text-purple-500", bg: "bg-purple-50" },
+          { label: "Delivered", count: statusCounts.delivered, icon: ShoppingBag, color: "text-green-500", bg: "bg-green-50" },
+          { label: "Cancelled", count: statusCounts.cancelled, icon: X, color: "text-red-500", bg: "bg-red-50" },
         ].map((s) => (
-          <div key={s.label} className="bg-white p-6 rounded-3xl border border-brand/5 shadow-sm flex items-center space-x-4">
-            <div className={`p-3 rounded-2xl ${s.bg} ${s.color}`}>
-              <s.icon size={20} />
+          <div key={s.label} className="bg-white p-4 rounded-3xl border border-brand/5 shadow-sm flex items-center space-x-3">
+            <div className={`p-2.5 rounded-2xl ${s.bg} ${s.color} flex-shrink-0`}>
+              <s.icon size={16} />
             </div>
-            <div>
-              <p className="text-[10px] font-black text-brand/40 uppercase tracking-widest">{s.label}</p>
-              <p className="text-xl font-bold text-brand">{s.count} Orders</p>
+            <div className="min-w-0">
+              <p className="text-[8px] font-black text-brand/40 uppercase tracking-widest truncate">{s.label}</p>
+              <p className="text-base font-bold text-brand">{s.count}</p>
             </div>
           </div>
         ))}
@@ -264,7 +269,9 @@ export default function AdminOrders() {
                 <option value="pending">Pending</option>
                 <option value="confirmed">Confirmed</option>
                 <option value="processing">Processing</option>
-                <option value="completed">Completed</option>
+                <option value="ready to ship">Ready to Ship</option>
+                <option value="shipped">Shipped</option>
+                <option value="delivered">Delivered</option>
                 <option value="cancelled">Cancelled</option>
               </select>
               <ChevronDown size={12} className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none opacity-40 text-brand" />
@@ -454,6 +461,30 @@ export default function AdminOrders() {
                               {order.paymentStatus === 'paid' ? `₹${order.totalAmount.toLocaleString()}` : '₹0'}
                             </span>
                           </div>
+
+                          {order.paymentStatus !== 'paid' && (
+                            <div className="pt-2 border-t border-brand/5 flex flex-col gap-2">
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setSelectedOrderForPayment(order);
+                                  setPaymentForm({ razorpayPaymentId: "" });
+                                  setShowPaymentModal(true);
+                                }}
+                                className="w-full bg-[#C5A059] hover:bg-[#C5A059]/90 text-white font-black text-[9px] uppercase tracking-widest rounded-xl py-2 px-4 transition-all flex items-center justify-center space-x-1.5 cursor-pointer shadow-sm"
+                              >
+                                <CreditCard size={12} />
+                                <span>Update Payment Status</span>
+                              </button>
+                              
+                              <div className="group relative flex items-center justify-center gap-1.5 text-[9px] font-medium text-brand/50 hover:text-brand/80 cursor-help mt-1 transition-colors">
+                                <span>⚠️ Verification Required</span>
+                                <div className="absolute bottom-full mb-2 hidden group-hover:block w-48 bg-brand text-white text-[9px] font-bold leading-normal p-3 rounded-xl shadow-xl z-20 border border-white/10 text-center">
+                                  Check your Razorpay dashboard under Order ID <span className="font-mono text-brand-accent">{order.razorpayOrderId}</span> to verify the payment status before updating here.
+                                </div>
+                              </div>
+                            </div>
+                          )}
                         </div>
                       </div>
                     </div>
@@ -822,6 +853,123 @@ export default function AdminOrders() {
                     <>
                       <CheckCircle2 size={14} />
                       <span>Confirm & Ship</span>
+                    </>
+                  )}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* ─── UPDATE PAYMENT STATUS MODAL ────────────────────────── */}
+      {showPaymentModal && selectedOrderForPayment && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
+          <div 
+            className="absolute inset-0 bg-brand/40 backdrop-blur-sm" 
+            onClick={() => !isSubmittingPayment && setShowPaymentModal(false)} 
+          />
+          <div className="relative w-full max-w-md bg-white rounded-[2.5rem] shadow-2xl border border-brand/5 overflow-hidden animate-in zoom-in-95 duration-200">
+            {/* Header */}
+            <div className="p-8 border-b border-brand/5 flex items-center justify-between bg-brand/5">
+              <div>
+                <h3 className="text-xl font-playfair font-bold text-brand flex items-center gap-2">
+                  <CreditCard className="text-[#C5A059]" size={20} />
+                  Update Payment Status
+                </h3>
+                <p className="text-[10px] text-brand/40 font-bold uppercase tracking-widest mt-1">
+                  Order #AS-{selectedOrderForPayment.id}
+                </p>
+              </div>
+              <button 
+                onClick={() => setShowPaymentModal(false)}
+                disabled={isSubmittingPayment}
+                className="p-2 rounded-full hover:bg-brand/5 text-brand/40 hover:text-brand transition-colors cursor-pointer"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            {/* Form */}
+            <form onSubmit={async (e) => {
+              e.preventDefault();
+              if (!paymentForm.razorpayPaymentId) {
+                showToast("Please enter the Razorpay Payment ID");
+                return;
+              }
+              setIsSubmittingPayment(true);
+              try {
+                const res = await fetch(`/api/admin/orders/${selectedOrderForPayment.id}`, {
+                  method: "PATCH",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({
+                    paymentStatus: "paid",
+                    razorpayPaymentId: paymentForm.razorpayPaymentId,
+                  })
+                });
+                const data = await res.json();
+                if (data.success) {
+                  showToast("Payment status updated successfully!");
+                  setShowPaymentModal(false);
+                  fetchOrders();
+                } else {
+                  showToast(data.error || "Failed to update payment status");
+                }
+              } catch (err) {
+                console.error(err);
+                showToast("Something went wrong");
+              } finally {
+                setIsSubmittingPayment(false);
+              }
+            }} className="p-8 space-y-6">
+              <div className="space-y-4">
+                <div className="p-4 bg-amber-50 border border-amber-100 rounded-2xl">
+                  <p className="text-[10px] font-bold text-amber-800 uppercase tracking-wider mb-1">Razorpay Order Reference</p>
+                  <p className="text-xs font-mono font-bold text-amber-900">{selectedOrderForPayment.razorpayOrderId || "No order ID generated"}</p>
+                </div>
+
+                <div>
+                  <label className="block text-[10px] font-black text-brand/40 uppercase tracking-widest mb-2">
+                    Razorpay Payment ID <span className="text-red-500">*</span>
+                  </label>
+                  <input 
+                    type="text" 
+                    required
+                    value={paymentForm.razorpayPaymentId}
+                    onChange={(e) => setPaymentForm({ razorpayPaymentId: e.target.value })}
+                    placeholder="e.g. pay_N1A2B3C4D5E6F7"
+                    className="w-full bg-white border border-brand/10 rounded-2xl py-3.5 px-4 text-xs font-bold text-brand focus:outline-none focus:ring-4 focus:ring-[#C5A059]/5 transition-all shadow-sm"
+                  />
+                  <p className="text-[9px] text-brand/40 font-medium mt-2 leading-relaxed">
+                    Verify the payment status on your Razorpay dashboard for order <span className="font-mono font-bold">{selectedOrderForPayment.razorpayOrderId}</span>, copy the Payment ID, and paste it here.
+                  </p>
+                </div>
+              </div>
+
+              {/* Submit Buttons */}
+              <div className="flex items-center space-x-4 pt-4 border-t border-brand/5">
+                <button
+                  type="button"
+                  disabled={isSubmittingPayment}
+                  onClick={() => setShowPaymentModal(false)}
+                  className="flex-1 py-3.5 bg-brand/5 text-brand/60 hover:text-brand disabled:opacity-40 font-black text-[10px] uppercase tracking-widest rounded-2xl cursor-pointer border border-brand/5 hover:bg-brand/10 transition-all text-center"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={isSubmittingPayment}
+                  className="flex-1 py-3.5 bg-brand text-white hover:bg-brand/90 disabled:opacity-40 font-black text-[10px] uppercase tracking-widest rounded-2xl cursor-pointer shadow-lg hover:shadow-xl transition-all text-center flex items-center justify-center gap-2"
+                >
+                  {isSubmittingPayment ? (
+                    <>
+                      <Loader2 className="animate-spin" size={14} />
+                      <span>Updating...</span>
+                    </>
+                  ) : (
+                    <>
+                      <CheckCircle2 size={14} />
+                      <span>Confirm & Save</span>
                     </>
                   )}
                 </button>

@@ -18,11 +18,11 @@ export async function PATCH(
   }
 
   try {
-    const { status } = await req.json();
+    const { status, paymentStatus, razorpayPaymentId } = await req.json();
     const orderId = parseInt(id);
 
-    if (!status) {
-      return NextResponse.json({ success: false, error: "Status is required" }, { status: 400 });
+    if (!status && !paymentStatus) {
+      return NextResponse.json({ success: false, error: "Status or Payment Status is required" }, { status: 400 });
     }
 
     // Fetch current order status
@@ -35,21 +35,34 @@ export async function PATCH(
       return NextResponse.json({ success: false, error: "Order not found" }, { status: 404 });
     }
 
-    const currentStatus = currentOrder[0].status?.toLowerCase() || "";
-    if (status.toLowerCase() === "cancelled" && (currentStatus === "shipped" || currentStatus === "delivered")) {
-      return NextResponse.json(
-        { success: false, error: "Cannot cancel an order that has already been shipped or delivered" },
-        { status: 400 }
-      );
+    const updateData: any = {};
+
+    if (status) {
+      const currentStatus = currentOrder[0].status?.toLowerCase() || "";
+      if (status.toLowerCase() === "cancelled" && (currentStatus === "shipped" || currentStatus === "delivered")) {
+        return NextResponse.json(
+          { success: false, error: "Cannot cancel an order that has already been shipped or delivered" },
+          { status: 400 }
+        );
+      }
+      updateData.status = status;
+    }
+
+    if (paymentStatus) {
+      updateData.paymentStatus = paymentStatus;
+    }
+
+    if (razorpayPaymentId !== undefined) {
+      updateData.razorpayPaymentId = razorpayPaymentId;
     }
 
     await db.update(orders)
-      .set({ status })
+      .set(updateData)
       .where(eq(orders.id, orderId));
 
-    return NextResponse.json({ success: true, message: "Order status updated successfully" });
+    return NextResponse.json({ success: true, message: "Order updated successfully" });
   } catch (error: any) {
-    console.error("Error updating order status:", error);
+    console.error("Error updating order:", error);
     return NextResponse.json({ success: false, error: "Internal Server Error" }, { status: 500 });
   }
 }
