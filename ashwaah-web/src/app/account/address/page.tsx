@@ -71,9 +71,6 @@ export default function AddressPage() {
       </div>
 
       <div className="bg-white rounded-[2.5rem] p-8 md:p-12 shadow-xl border border-brand/5 relative overflow-hidden min-h-[300px] flex flex-col">
-        <div className="absolute top-0 right-0 p-8 opacity-[0.03] pointer-events-none">
-          <MapPin size={120} />
-        </div>
 
         {addresses.length > 0 ? (
           <div className="flex flex-col h-full flex-1 z-10">

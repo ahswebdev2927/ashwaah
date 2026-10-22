@@ -2,22 +2,22 @@ import { NextResponse } from "next/server";
 import { db } from "@/db";
 import { wishlists, products, users, productVariations } from "@/db/schema";
 import { eq, and } from "drizzle-orm";
-import { cookies } from "next/headers";
+import { getVerifiedPhoneFromCookie } from "@/db/auth-helper";
+
+async function getUserFromCookie() {
+  const phoneNumber = await getVerifiedPhoneFromCookie("auth_session");
+  if (!phoneNumber) return null;
+
+  const rows = await db.select().from(users).where(eq(users.phoneNumber, phoneNumber)).limit(1);
+  return rows[0] ?? null;
+}
 
 export async function GET() {
   try {
-    const cookieStore = await cookies();
-    const phone = cookieStore.get("auth_session")?.value;
-
-    if (!phone) {
-      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
-    }
-
-    const userResult = await db.select().from(users).where(eq(users.phoneNumber, phone)).limit(1);
-    const user = userResult[0];
+    const user = await getUserFromCookie();
 
     if (!user) {
-      return NextResponse.json({ success: false, error: "User not found" }, { status: 404 });
+      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
     }
 
     const dbWishlist = await db.select({
@@ -58,18 +58,10 @@ export async function GET() {
 
 export async function POST(request: Request) {
   try {
-    const cookieStore = await cookies();
-    const phone = cookieStore.get("auth_session")?.value;
-
-    if (!phone) {
-      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
-    }
-
-    const userResult = await db.select().from(users).where(eq(users.phoneNumber, phone)).limit(1);
-    const user = userResult[0];
+    const user = await getUserFromCookie();
 
     if (!user) {
-      return NextResponse.json({ success: false, error: "User not found" }, { status: 404 });
+      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
     }
 
     const { productId } = await request.json();
@@ -107,18 +99,10 @@ export async function POST(request: Request) {
 
 export async function DELETE(request: Request) {
   try {
-    const cookieStore = await cookies();
-    const phone = cookieStore.get("auth_session")?.value;
-
-    if (!phone) {
-      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
-    }
-
-    const userResult = await db.select().from(users).where(eq(users.phoneNumber, phone)).limit(1);
-    const user = userResult[0];
+    const user = await getUserFromCookie();
 
     if (!user) {
-      return NextResponse.json({ success: false, error: "User not found" }, { status: 404 });
+      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
     }
 
     const { searchParams } = new URL(request.url);

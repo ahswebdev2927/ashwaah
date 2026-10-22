@@ -65,12 +65,17 @@ export const useWishlistStore = create<WishlistStore>((set, get) => ({
             };
           });
           set({ items: mapped, isLoaded: true, isAuthenticated: true });
+        } else {
+          set({ isLoaded: true });
         }
-      } else if (res.status === 401) {
+      } else if (res.status === 401 || res.status === 404) {
         set({ items: [], isLoaded: true, isAuthenticated: false });
+      } else {
+        set({ isLoaded: true });
       }
     } catch (err) {
       console.error("Failed to fetch wishlist", err);
+      set({ isLoaded: true });
     }
   },
 
