@@ -541,17 +541,17 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
               <button
                 disabled={!!(selectedColor && selectedSize && currentStock === 0)}
                 onClick={handleAddToCart}
-                className={`flex-1 flex items-center justify-center space-x-3 font-bold py-4 rounded-2xl transition-all text-base shadow-xl ${selectedColor && selectedSize && currentStock === 0
+                className={`flex-1 h-14 flex items-center justify-center space-x-2 md:space-x-3 font-bold px-4 rounded-2xl transition-all text-sm md:text-base shadow-xl ${selectedColor && selectedSize && currentStock === 0
                     ? "bg-brand/10 text-brand/30 cursor-not-allowed"
                     : "bg-brand text-white hover:bg-brand-hover active:scale-[0.98] border border-transparent hover:border-brand-accent"
                   }`}
               >
                 {added ? (
-                  <Check size={22} className="text-brand-accent animate-in zoom-in duration-300" />
+                  <Check size={20} className="text-brand-accent animate-in zoom-in duration-300 shrink-0" />
                 ) : (
-                  <ShoppingBag size={22} className="transition-all" />
+                  <ShoppingBag size={20} className="transition-all shrink-0" />
                 )}
-                <span className={added ? "text-brand-accent transition-colors duration-300" : ""}>
+                <span className={`truncate ${added ? "text-brand-accent transition-colors duration-300" : ""}`}>
                   {selectedColor && selectedSize && currentStock === 0 ? "Out of Stock" : added ? "Added to Bag!" : "Add to Bag"}
                 </span>
               </button>
@@ -559,11 +559,12 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
               <button
                 type="button"
                 onClick={handleWishlistClick}
-                className="flex-1 flex items-center justify-center space-x-3 font-bold py-4 rounded-2xl transition-all text-base shadow-xl bg-brand text-white hover:bg-brand-hover active:scale-[0.98] border border-transparent hover:border-brand-accent cursor-pointer"
+                className="w-14 h-14 md:w-auto md:px-6 shrink-0 flex items-center justify-center space-x-2 font-bold rounded-2xl transition-all text-sm md:text-base shadow-xl bg-brand text-white hover:bg-brand-hover active:scale-[0.98] border border-transparent hover:border-brand-accent cursor-pointer"
                 title={isWishlisted ? "Remove from Wishlist" : "Add to Wishlist"}
+                aria-label={isWishlisted ? "Remove from Wishlist" : "Add to Wishlist"}
               >
-                <Heart className={`w-5 h-5 transition-colors ${isWishlisted ? "fill-red-500 text-red-500 animate-pulse" : "text-white"}`} />
-                <span>{isWishlisted ? "Wishlisted" : "Add to Wishlist"}</span>
+                <Heart className={`w-5 h-5 shrink-0 transition-colors ${isWishlisted ? "fill-red-500 text-red-500 animate-pulse" : "text-white"}`} />
+                <span className="hidden md:inline">{isWishlisted ? "Wishlisted" : "Add to Wishlist"}</span>
               </button>
 
               <button
