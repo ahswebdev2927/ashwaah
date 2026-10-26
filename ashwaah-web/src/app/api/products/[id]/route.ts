@@ -1,5 +1,6 @@
 import { db } from "@/db";
 import { products, productVariations } from "@/db/schema";
+import { parseProductId } from "@/utils/product";
 import { eq } from "drizzle-orm";
 import { NextResponse } from "next/server";
 
@@ -9,9 +10,9 @@ export async function GET(
 ) {
   try {
     const { id } = await params;
-    const productId = parseInt(id);
+    const productId = parseProductId(id);
 
-    if (isNaN(productId)) {
+    if (productId === null) {
       return NextResponse.json({ error: "Invalid product ID" }, { status: 400 });
     }
 

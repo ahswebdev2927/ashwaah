@@ -8,6 +8,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useWishlistStore } from "@/store/useWishlistStore";
 import { useCartStore } from "@/store/useCartStore";
 import HoverImageCarousel from "@/components/HoverImageCarousel";
+import { getProductUrl } from "@/utils/product";
 
 interface Variation {
   id: number;
@@ -277,7 +278,7 @@ export default function WishlistPage() {
                   </button>
 
                   {/* Image */}
-                  <Link href={`/product/${item.productId}`} className="relative w-full aspect-[4/5] overflow-hidden bg-brand-light/50 border-b border-brand/5 block">
+                  <Link href={getProductUrl({ id: item.productId, name: item.name })} className="relative w-full aspect-[4/5] overflow-hidden bg-brand-light/50 border-b border-brand/5 block">
                     <HoverImageCarousel 
                       images={item.images || []}
                       defaultImage={item.imageUrl || "/images/placeholder.png"}

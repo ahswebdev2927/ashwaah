@@ -1,13 +1,13 @@
 "use client";
 
 import { useState, useEffect, use, useMemo } from "react";
-import { Sparkles, ArrowLeft, ShoppingBag, Check, X, Heart } from "lucide-react";
+import { Sparkles, ArrowLeft, ShoppingBag, Check, X, Heart, Share2 } from "lucide-react";
 import Link from "next/link";
 import { useCartStore } from "@/store/useCartStore";
 import { useWishlistStore } from "@/store/useWishlistStore";
 import { usePathname } from "next/navigation";
 import RefineDrawer from "@/components/RefineDrawer";
-import { getProductImageUrls } from "@/utils/product";
+import { getProductImageUrls, parseProductId, createProductSlug } from "@/utils/product";
 
 
 interface Variation {
@@ -74,6 +74,7 @@ const getColorHex = (colorName: string) => {
 
 export default function ProductPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
+  const numericId = parseProductId(id);
   const [product, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
   const [selectedColor, setSelectedColor] = useState<string | null>(null);
@@ -82,13 +83,15 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
   const [isCustomOpen, setIsCustomOpen] = useState(false);
   const [measurements, setMeasurements] = useState<Record<string, string>>({});
   const [added, setAdded] = useState(false);
+  const [copied, setCopied] = useState(false);
   const [toast, setToast] = useState("");
   const [isSizeGuideOpen, setIsSizeGuideOpen] = useState(false);
 
   const addItem = useCartStore((state) => state.addItem);
 
   const pathname = usePathname();
-  const isWishlisted = useWishlistStore((state) => state.items.some((item) => item.productId === Number(id)));
+  const currentProductId = product?.id ?? numericId ?? Number(id);
+  const isWishlisted = useWishlistStore((state) => state.items.some((item) => item.productId === currentProductId));
   const addItemToWishlist = useWishlistStore((state) => state.addItem);
   const removeItemFromWishlist = useWishlistStore((state) => state.removeItem);
   const isAuthenticated = useWishlistStore((state) => state.isAuthenticated);
@@ -112,27 +115,70 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
     return Object.entries(parsedSpecs).filter(([k]) => k.toLowerCase() !== "key words" && k.toLowerCase() !== "key details");
   }, [parsedSpecs]);
 
-
   const handleWishlistClick = async () => {
     if (!isAuthenticated) {
       window.location.href = `/login?redirect=${encodeURIComponent(pathname)}`;
       return;
     }
 
+    const targetId = currentProductId;
+    if (!targetId || isNaN(targetId)) return;
+
     if (isWishlisted) {
-      await removeItemFromWishlist(Number(id));
+      await removeItemFromWishlist(targetId);
     } else {
-      await addItemToWishlist(Number(id));
+      await addItemToWishlist(targetId);
+    }
+  };
+
+  const handleShare = async () => {
+    if (!product) return;
+
+    const canonicalPath = `/product/${createProductSlug(product.name, product.id)}`;
+    const productUrl = `${window.location.origin}${canonicalPath}`;
+
+    if (typeof navigator !== "undefined" && navigator.share) {
+      try {
+        await navigator.share({
+          title: product.name,
+          text: `Check out ${product.name} on Ashwaah`,
+          url: productUrl,
+        });
+        return;
+      } catch (err: any) {
+        if (err?.name === "AbortError") return;
+      }
+    }
+
+    try {
+      await navigator.clipboard.writeText(productUrl);
+      setCopied(true);
+      setToast("Product link copied to clipboard!");
+      setTimeout(() => {
+        setCopied(false);
+        setToast("");
+      }, 2500);
+    } catch (err) {
+      console.error("Failed to copy link:", err);
     }
   };
 
   useEffect(() => {
     async function fetchProduct() {
       try {
-        const res = await fetch(`/api/products/${id}`);
+        const fetchId = numericId ?? id;
+        const res = await fetch(`/api/products/${fetchId}`);
         if (res.ok) {
           const data = await res.json();
           setProduct(data);
+
+          // Update URL in browser to canonical slug if not already matching
+          if (typeof window !== "undefined" && data?.id && data?.name) {
+            const canonicalPath = `/product/${createProductSlug(data.name, data.id)}`;
+            if (window.location.pathname !== canonicalPath) {
+              window.history.replaceState(null, "", canonicalPath);
+            }
+          }
 
           // Set initial color and size if available
           const uniqueColors = Array.from(new Set(data.variations.map((v: Variation) => v.color))) as string[];
@@ -490,8 +536,8 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
               </div>
             )}
 
-            {/* Add to Cart & Wishlist */}
-            <div className="mt-auto pt-6 border-t border-brand/5 flex items-center gap-4 w-full">
+            {/* Add to Cart, Wishlist & Share */}
+            <div className="mt-auto pt-6 border-t border-brand/5 flex items-center gap-3 w-full">
               <button
                 disabled={!!(selectedColor && selectedSize && currentStock === 0)}
                 onClick={handleAddToCart}
@@ -518,6 +564,20 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
               >
                 <Heart className={`w-5 h-5 transition-colors ${isWishlisted ? "fill-red-500 text-red-500 animate-pulse" : "text-white"}`} />
                 <span>{isWishlisted ? "Wishlisted" : "Add to Wishlist"}</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={handleShare}
+                className="w-14 h-14 shrink-0 flex items-center justify-center rounded-2xl transition-all shadow-xl bg-white text-brand hover:text-brand-accent hover:border-brand-accent/40 border-2 border-brand/10 active:scale-[0.98] cursor-pointer group"
+                title={copied ? "Link Copied!" : "Share Product"}
+                aria-label="Share product link"
+              >
+                {copied ? (
+                  <Check size={20} className="text-green-600 animate-in zoom-in duration-200" />
+                ) : (
+                  <Share2 size={20} className="transition-transform group-hover:scale-110" />
+                )}
               </button>
             </div>
           </div>

@@ -9,6 +9,7 @@ import ProfileDropdown from "./ProfileDropdown";
 import SearchModal from "./SearchModal";
 import { useCartStore } from "@/store/useCartStore";
 import { useWishlistStore } from "@/store/useWishlistStore";
+import { getProductUrl } from "@/utils/product";
 
 type NavItem = {
   id: number;
@@ -465,7 +466,7 @@ export default function Navbar() {
                     >
                       {/* Thumbnail and Info */}
                       <Link
-                        href={`/product/${item.productId}`}
+                        href={getProductUrl({ id: item.productId, name: item.name })}
                         onClick={() => setIsWishlistOpen(false)}
                         className="flex items-center space-x-4 flex-1 min-w-0 pr-4"
                       >
@@ -492,7 +493,7 @@ export default function Navbar() {
                       {/* Actions */}
                       <div className="flex items-center space-x-2">
                         <Link
-                          href={`/product/${item.productId}`}
+                          href={getProductUrl({ id: item.productId, name: item.name })}
                           onClick={() => setIsWishlistOpen(false)}
                           className="px-3 py-2 bg-[#C5A059] text-white text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-[#B38E46] transition shadow-sm"
                         >

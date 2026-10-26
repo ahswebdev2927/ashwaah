@@ -56,3 +56,55 @@ export function getFirstProductImageUrl(
   const urls = getProductImageUrls(imagesJson, colorsJson, selectedColor);
   return urls.length > 0 ? urls[0] : "/images/placeholder.png";
 }
+
+/**
+ * Creates an SEO-friendly unique slug from a product's name and ID.
+ * Example: ("Men's Classic Shirt", 42) => "mens-classic-shirt-42"
+ */
+export function createProductSlug(name: string | null | undefined, id: number | string): string {
+  const cleanId = String(id).trim();
+  if (!name) return `product-${cleanId}`;
+
+  const slugifiedName = name
+    .toLowerCase()
+    .trim()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+
+  return slugifiedName ? `${slugifiedName}-${cleanId}` : `product-${cleanId}`;
+}
+
+/**
+ * Extracts the numeric product ID from either a pure ID ("42") or a slug ("mens-classic-shirt-42").
+ */
+export function parseProductId(slugOrId: string | number | null | undefined): number | null {
+  if (slugOrId === null || slugOrId === undefined) return null;
+  const str = String(slugOrId).trim();
+  if (!str) return null;
+
+  // Pure number check
+  if (/^\d+$/.test(str)) {
+    const num = parseInt(str, 10);
+    return isNaN(num) ? null : num;
+  }
+
+  // Trailing ID in slug check
+  const match = str.match(/-(\d+)$/);
+  if (match && match[1]) {
+    const num = parseInt(match[1], 10);
+    return isNaN(num) ? null : num;
+  }
+
+  return null;
+}
+
+/**
+ * Returns the canonical product URL for navigation.
+ */
+export function getProductUrl(product: { id: number | string; name?: string | null }): string {
+  if (!product || product.id === undefined || product.id === null) return "/";
+  if (!product.name) return `/product/${product.id}`;
+  return `/product/${createProductSlug(product.name, product.id)}`;
+}

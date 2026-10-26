@@ -5,6 +5,7 @@ import { Heart } from 'lucide-react';
 import { useWishlistStore } from '@/store/useWishlistStore';
 import { usePathname } from 'next/navigation';
 import HoverImageCarousel from './HoverImageCarousel';
+import { getProductUrl } from '@/utils/product';
 
 interface Product {
   id: string;
@@ -56,7 +57,7 @@ export default function ProductCard({ product }: { product: Product }) {
 
   return (
     <Link 
-      href={`/product/${product.id}`} 
+      href={getProductUrl(product)} 
       className="group flex flex-col w-full bg-[#FFFDF6] rounded-3xl border border-brand/5 shadow-sm hover:shadow-md hover:scale-[1.02] transition-all duration-300 overflow-hidden"
     >
       {/* Top Image Section */}

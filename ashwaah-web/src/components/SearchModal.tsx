@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import { Search, X, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { getFirstProductImageUrl } from "@/utils/product";
+import { getFirstProductImageUrl, getProductUrl } from "@/utils/product";
 
 type Product = {
   id: number;
@@ -106,7 +106,7 @@ export default function SearchModal({ isOpen, onClose }: { isOpen: boolean; onCl
                 return (
                   <Link
                     key={product.id}
-                    href={`/product/${product.id}`}
+                    href={getProductUrl(product)}
                     onClick={onClose}
                     className="group bg-white/5 rounded-2xl overflow-hidden hover:bg-white/10 transition-colors flex flex-col border border-white/5"
                   >
